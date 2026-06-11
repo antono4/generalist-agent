@@ -270,12 +270,14 @@
 
     <script>
         // OpenHands API Configuration
-        // Get your API key from: https://app.all-hands.dev/settings/api-keys
         const API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
         const API_BASE = 'https://app.all-hands.dev/api/v1';
         
         let conversationId = null;
+        let lastEventId = null;
         let isProcessing = false;
+        let pollInterval = null;
+        let executionFinished = false;
 
         async function sendMessage() {
             const input = document.getElementById('userInput');
@@ -287,24 +289,25 @@
             input.value = '';
             showTyping();
             isProcessing = true;
+            executionFinished = false;
             document.getElementById('sendBtn').disabled = true;
             
             try {
-                const response = await callOpenHandsAPI(message);
+                const result = await callOpenHandsAPI(message);
                 hideTyping();
                 
-                if (response.error) {
-                    addMessage(`Error: ${response.error}`, 'bot');
-                } else if (response.conversation_url) {
-                    // Success - provide the conversation URL for viewing
-                    addMessage(`✅ Conversation started successfully!\n\nView the conversation at:\n${response.conversation_url}\n\nNote: This web interface shows the initiation. For full chat experience, use the OpenHands web app.`, 'bot');
-                } else if (response.message) {
-                    addMessage(response.message, 'bot');
+                if (result.error) {
+                    addMessage(`Error: ${result.error}`, 'bot');
                 } else {
-                    addMessage('Conversation created. Check the OpenHands app for the full interaction.', 'bot');
+                    conversationId = result.conversation_id;
+                    lastEventId = null;
+                    
+                    // Start polling for responses
+                    startPolling();
                 }
             } catch (error) {
                 hideTyping();
+                stopPolling();
                 addMessage(`Connection error: ${error.message}`, 'bot');
             }
             
@@ -313,7 +316,6 @@
         }
 
         async function callOpenHandsAPI(message) {
-            // Create conversation
             const createRes = await fetch(`${API_BASE}/app-conversations`, {
                 method: 'POST',
                 headers: {
@@ -334,23 +336,15 @@
             
             const createData = await createRes.json();
             
-            // Handle both sync and async responses
             if (createData.app_conversation_id) {
-                conversationId = createData.app_conversation_id;
+                return { conversation_id: createData.app_conversation_id };
             } else if (createData.id) {
-                // Async - poll for ready status
                 const ready = await pollStartTask(createData.id);
                 if (ready.error) return ready;
-                conversationId = ready.app_conversation_id;
-            } else {
-                return { error: 'Invalid API response' };
+                return { conversation_id: ready.app_conversation_id };
             }
             
-            return { 
-                success: true, 
-                conversation_id: conversationId,
-                conversation_url: `https://app.all-hands.dev/conversations/${conversationId}`
-            };
+            return { error: 'Invalid API response' };
         }
 
         async function pollStartTask(taskId) {
@@ -366,7 +360,6 @@
                 if (!res.ok) continue;
                 
                 const data = await res.json();
-                // Response is an array: [{id, status, app_conversation_id, ...}]
                 const task = Array.isArray(data) ? data[0] : data;
                 
                 if (task?.status === 'READY' && task.app_conversation_id) {
@@ -374,7 +367,97 @@
                 }
             }
             
-            return { error: 'Timeout waiting for sandbox to start (may still be running)' };
+            return { error: 'Timeout waiting for sandbox to start' };
+        }
+
+        function startPolling() {
+            if (pollInterval) clearInterval(pollInterval);
+            
+            pollInterval = setInterval(async () => {
+                await pollForEvents();
+            }, 3000);
+        }
+
+        function stopPolling() {
+            if (pollInterval) {
+                clearInterval(pollInterval);
+                pollInterval = null;
+            }
+        }
+
+        async function pollForEvents() {
+            if (!conversationId || executionFinished) return;
+            
+            try {
+                const res = await fetch(`${API_BASE}/conversation/${conversationId}/events/search?limit=50`, {
+                    headers: { 
+                        'Authorization': `Bearer ${API_KEY}`,
+                        'Accept': 'application/json'
+                    }
+                });
+                
+                if (!res.ok) return;
+                
+                const data = await res.json();
+                const events = data.items || [];
+                
+                if (events.length === 0) return;
+                
+                // Find new events
+                const newEvents = lastEventId 
+                    ? events.filter(e => e.id !== lastEventId && new Date(e.timestamp) > new Date(lastEventId))
+                    : events;
+                
+                // Process events
+                for (const event of newEvents) {
+                    lastEventId = event.id;
+                    
+                    // Check for execution status
+                    if (event.kind === 'ConversationStateUpdateEvent') {
+                        if (event.key === 'execution_status') {
+                            if (event.value === 'finished') {
+                                executionFinished = true;
+                                stopPolling();
+                                hideTyping();
+                                addMessage('\n\n✅ Task completed!', 'bot');
+                            }
+                        }
+                    }
+                    
+                    // Get assistant messages
+                    if (event.kind === 'MessageEvent' && event.source === 'assistant') {
+                        const content = event.message?.content;
+                        if (content) {
+                            hideTyping();
+                            const text = extractText(content);
+                            if (text) {
+                                addMessage(text, 'bot');
+                            }
+                        }
+                    }
+                    
+                    // Get tool outputs from observations
+                    if (event.kind === 'ObservationEvent' && event.source === 'environment') {
+                        const obs = event.observation;
+                        if (obs?.output) {
+                            hideTyping();
+                            addMessage(obs.output, 'bot');
+                        }
+                    }
+                }
+                
+            } catch (error) {
+                console.log('Polling error:', error);
+            }
+        }
+
+        function extractText(content) {
+            if (typeof content === 'string') return content;
+            if (Array.isArray(content)) {
+                return content.map(c => c.text || c.content || '').join('\n').trim();
+            }
+            if (content?.text) return content.text;
+            return '';
         }
 
         function sleep(ms) {
@@ -382,6 +465,8 @@
         }
 
         function addMessage(content, type) {
+            if (!content || !content.trim()) return;
+            
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.className = `message ${type}`;
@@ -400,6 +485,7 @@
         }
 
         function showTyping() {
+            hideTyping();
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.id = 'typing';
