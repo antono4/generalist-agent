@@ -1,273 +1,610 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>GENERALIST-X7</title>
-<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@900&family=Rajdhani:wght@600&display=swap" rel="stylesheet">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Generalist AI - Professional Assistant</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
-:root{--c:#00f0ff;--g:#00ff88;--r:#ff3366;--bg:#0a0c10;--p:#0f1218;--k:#151920}
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:Rajdhani;background:var(--bg);color:#e0e6ed;min-height:100vh;overflow:hidden}
-body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:repeating-linear-gradient(0deg,transparent,transparent 2px,rgba(0,240,255,.03) 2px,rgba(0,240,255,.03) 4px);pointer-events:none;z-index:999}
-.c{display:flex;flex-direction:column;height:100vh}
-.h{background:linear-gradient(180deg,var(--p) 0%,var(--bg) 100%);padding:20px 32px;display:flex;align-items:center;justify-content:space-between;border-bottom:2px solid var(--c);position:relative}
-.h::after{content:'';position:absolute;bottom:-2px;left:0;right:0;height:2px;background:var(--c);box-shadow:0 0 20px var(--c),0 0 40px var(--c)}
-.f{display:flex;align-items:center;gap:24px}
-.p{width:80px;height:80px;background:linear-gradient(145deg,#1a1f28,#0d1015);border-radius:16px;border:2px solid var(--c);display:flex;align-items:center;justify-content:center;position:relative;box-shadow:inset 0 0 20px rgba(0,240,255,.1),0 0 30px rgba(0,240,255,.2)}
-.p::before{content:'';position:absolute;top:-2px;left:20%;right:20%;height:2px;background:var(--c);box-shadow:0 0 10px var(--c)}
-.e{display:flex;gap:16px}
-.b{width:16px;height:16px;background:var(--c);border-radius:50%;animation:blink 4s infinite;box-shadow:0 0 15px var(--c)}
-.b:nth-child(2){animation-delay:.1s}
-@keyframes blink{0%,95%,100%{transform:scaleY(1)}97%{transform:scaleY(.1)}}
-.t h1{font-family:Orbitron;font-size:1.8rem;font-weight:900;letter-spacing:4px;background:linear-gradient(90deg,var(--c),var(--g));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
-.t span{font-size:.7rem;color:#5a6270;letter-spacing:3px;text-transform:uppercase;margin-top:4px;display:block}
-.s{display:flex;gap:20px}
-.i{display:flex;flex-direction:column;align-items:center}
-.l{font-size:.6rem;color:#5a6270;text-transform:uppercase;letter-spacing:2px}
-.v{font-family:Orbitron;font-size:.9rem;color:var(--g);text-shadow:0 0 10px var(--g)}
-.m{display:flex;gap:4px}
-.a{width:4px;height:16px;background:var(--g);border-radius:2px;animation:bar .8s infinite}
-.a:nth-child(2){animation-delay:.2s;height:12px}
-.a:nth-child(3){animation-delay:.4s;height:8px}
-.a:nth-child(4){animation-delay:.6s;height:14px}
-@keyframes bar{0%,100%{opacity:1}50%{opacity:.4}}
-.ca{flex:1;overflow-y:auto;padding:32px;display:flex;flex-direction:column;gap:24px;background:radial-gradient(ellipse at 50% 0%,rgba(0,240,255,.03) 0%,transparent 50%),var(--bg)}
-.msg{display:flex;flex-direction:column;max-width:75%;animation:slide .5s ease-out}
-@keyframes slide{from{opacity:0;transform:translateX(-30px)}to{opacity:1;transform:translateX(0)}}
-.msg.user{align-self:flex-end;align-items:flex-end}
-.msg.bot{align-self:flex-start;align-items:flex-start}
-.mh{display:flex;align-items:center;gap:10px;margin-bottom:8px}
-.mi{width:28px;height:28px;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:14px}
-.msg.user .mi{background:rgba(255,51,102,.2);border:1px solid var(--r)}
-.msg.bot .mi{background:rgba(0,240,255,.2);border:1px solid var(--c)}
-.ms{font-family:Orbitron;font-size:.7rem;letter-spacing:2px;text-transform:uppercase}
-.msg.user .ms{color:var(--r)}
-.msg.bot .ms{color:var(--c)}
-.mt{font-size:.6rem;color:#5a6270}
-.mk{padding:20px 24px;border-radius:12px;font-size:1rem;line-height:1.7}
-.msg.user .mk{background:linear-gradient(135deg,var(--k),var(--p));border:1px solid rgba(255,51,102,.3);border-radius:12px 12px 4px 12px}
-.msg.bot .mk{background:var(--k);border:1px solid rgba(0,240,255,.3);border-radius:4px 12px 12px 12px;box-shadow:inset 0 0 30px rgba(0,240,255,.05),0 0 20px rgba(0,240,255,.1)}
-.tp{display:flex;align-items:center;gap:16px;padding:20px 24px;background:var(--k);border:1px solid rgba(0,240,255,.3);border-radius:4px 12px 12px 12px;align-self:flex-start;max-width:200px}
-.pv{display:flex;gap:4px}
-.pb{width:4px;height:20px;background:var(--c);border-radius:2px;animation:proc .8s infinite}
-.pb:nth-child(1){animation-delay:0s}.pb:nth-child(2){animation-delay:.1s}.pb:nth-child(3){animation-delay:.2s}.pb:nth-child(4){animation-delay:.3s}.pb:nth-child(5){animation-delay:.4s}
-@keyframes proc{0%,100%{transform:scaleY(.3);opacity:.5}50%{transform:scaleY(1);opacity:1}}
-.pt{font-family:Orbitron;font-size:.65rem;color:var(--c);letter-spacing:2px}
-.ia{padding:24px 32px;background:var(--p);border-top:2px solid var(--c);position:relative}
-.ia::before{content:'';position:absolute;top:-2px;left:0;right:0;height:2px;background:var(--c);box-shadow:0 0 20px var(--c)}
-.ic{display:flex;gap:16px;align-items:center}
-.if{flex:1;display:flex;align-items:center;background:var(--k);border:2px solid rgba(0,240,255,.3);border-radius:8px;padding:4px}
-.if:focus-within{border-color:var(--c);box-shadow:0 0 20px rgba(0,240,255,.3)}
-.if input{flex:1;background:transparent;border:none;padding:16px 20px;font-family:Rajdhani;font-size:1rem;font-weight:500;color:#e0e6ed;outline:none;letter-spacing:1px}
-.if input::placeholder{color:#5a6270}
-.sb{width:56px;height:56px;background:linear-gradient(135deg,var(--c),#00b8cc);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .3s}
-.sb:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 30px rgba(0,240,255,.5)}
-.sb:disabled{opacity:.5;cursor:not-allowed}
-.sb svg{width:24px;height:24px;fill:var(--bg)}
-::-webkit-scrollbar{width:6px}::-webkit-scrollbar-track{background:var(--bg)}::-webkit-scrollbar-thumb{background:var(--c);border-radius:3px}
-.cd{position:fixed;width:100px;height:100px;pointer-events:none;opacity:.3}
-.ct{top:0;left:0;border-top:2px solid var(--c);border-left:2px solid var(--c)}
-.cr{top:0;right:0;border-top:2px solid var(--c);border-right:2px solid var(--c)}
-.cb{bottom:0;left:0;border-bottom:2px solid var(--c);border-left:2px solid var(--c)}
-.cb2{bottom:0;right:0;border-bottom:2px solid var(--c);border-right:2px solid var(--c)}
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f7f8fc;
+    --bg-tertiary: #ebeef5;
+    --bg-bot: #eef2ff;
+    --accent-primary: #4f46e5;
+    --accent-secondary: #818cf8;
+    --accent-success: #10b981;
+    --text-primary: #1f2937;
+    --text-secondary: #6b7280;
+    --text-muted: #9ca3af;
+    --border-color: #e5e7eb;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --shadow-lg: 0 10px 15px -3px rgba(0,0,0,0.1);
+    --radius-sm: 8px;
+    --radius-md: 16px;
+    --radius-lg: 24px;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+
+body {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+    background: var(--bg-secondary);
+    color: var(--text-primary);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+}
+
+/* Header */
+.header {
+    background: var(--bg-primary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    box-shadow: var(--shadow-sm);
+    position: sticky;
+    top: 0;
+    z-index: 100;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+}
+
+.header-avatar {
+    width: 48px;
+    height: 48px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    box-shadow: var(--shadow-md);
+}
+
+.header-info h1 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.header-info span {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+}
+
+.header-status {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 16px;
+    background: var(--bg-secondary);
+    border-radius: 20px;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-success);
+    border-radius: 50%;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+}
+
+.status-text {
+    font-size: 0.75rem;
+    font-weight: 500;
+    color: var(--accent-success);
+}
+
+/* Chat Container */
+.chat-container {
+    flex: 1;
+    max-width: 900px;
+    width: 100%;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    padding: 24px;
+}
+
+/* Messages */
+.messages {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+    overflow-y: auto;
+    padding-bottom: 20px;
+}
+
+.message {
+    display: flex;
+    gap: 12px;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+.message.user {
+    flex-direction: row-reverse;
+}
+
+.message-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    flex-shrink: 0;
+}
+
+.message.bot .message-avatar {
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+}
+
+.message.user .message-avatar {
+    background: var(--bg-tertiary);
+}
+
+.message-content {
+    max-width: 70%;
+    padding: 16px 20px;
+    border-radius: var(--radius-md);
+    line-height: 1.6;
+    font-size: 0.9375rem;
+}
+
+.message.bot .message-content {
+    background: var(--bg-bot);
+    border: 1px solid rgba(79, 70, 229, 0.1);
+    border-top-left-radius: 4px;
+}
+
+.message.user .message-content {
+    background: var(--accent-primary);
+    color: white;
+    border-top-right-radius: 4px;
+}
+
+.message-time {
+    font-size: 0.65rem;
+    color: var(--text-muted);
+    margin-top: 6px;
+    padding: 0 4px;
+}
+
+.message.user .message-time {
+    text-align: right;
+}
+
+/* Typing Indicator */
+.typing-indicator {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 16px 20px;
+    background: var(--bg-bot);
+    border-radius: var(--radius-md);
+    border-top-left-radius: 4px;
+    max-width: 140px;
+}
+
+.typing-dots {
+    display: flex;
+    gap: 4px;
+}
+
+.typing-dots span {
+    width: 8px;
+    height: 8px;
+    background: var(--accent-primary);
+    border-radius: 50%;
+    animation: bounce 1.4s infinite;
+}
+
+.typing-dots span:nth-child(2) { animation-delay: 0.2s; }
+.typing-dots span:nth-child(3) { animation-delay: 0.4s; }
+
+@keyframes bounce {
+    0%, 60%, 100% { transform: translateY(0); }
+    30% { transform: translateY(-8px); }
+}
+
+.typing-text {
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    font-weight: 500;
+}
+
+/* Input Area */
+.input-area {
+    background: var(--bg-primary);
+    border-top: 1px solid var(--border-color);
+    padding: 20px 24px;
+    margin-top: auto;
+}
+
+.input-container {
+    max-width: 900px;
+    margin: 0 auto;
+    display: flex;
+    gap: 12px;
+    align-items: flex-end;
+}
+
+.input-wrapper {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    background: var(--bg-secondary);
+    border: 2px solid transparent;
+    border-radius: var(--radius-lg);
+    padding: 4px;
+    transition: all 0.2s;
+}
+
+.input-wrapper:focus-within {
+    border-color: var(--accent-primary);
+    background: var(--bg-primary);
+    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
+}
+
+.input-wrapper input {
+    flex: 1;
+    background: transparent;
+    border: none;
+    padding: 14px 18px;
+    font-size: 0.9375rem;
+    color: var(--text-primary);
+    outline: none;
+}
+
+.input-wrapper input::placeholder {
+    color: var(--text-muted);
+}
+
+.send-btn {
+    width: 52px;
+    height: 52px;
+    background: var(--accent-primary);
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+    box-shadow: var(--shadow-md);
+}
+
+.send-btn:hover:not(:disabled) {
+    background: var(--accent-secondary);
+    transform: scale(1.05);
+}
+
+.send-btn:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.send-btn svg {
+    width: 22px;
+    height: 22px;
+    fill: white;
+}
+
+/* Quick Actions */
+.quick-actions {
+    display: flex;
+    gap: 8px;
+    padding: 12px 0;
+    flex-wrap: wrap;
+}
+
+.quick-btn {
+    padding: 8px 16px;
+    background: var(--bg-tertiary);
+    border: 1px solid var(--border-color);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.quick-btn:hover {
+    background: var(--accent-primary);
+    color: white;
+    border-color: var(--accent-primary);
+}
+
+/* Scrollbar */
+.messages::-webkit-scrollbar {
+    width: 6px;
+}
+
+.messages::-webkit-scrollbar-track {
+    background: transparent;
+}
+
+.messages::-webkit-scrollbar-thumb {
+    background: var(--border-color);
+    border-radius: 3px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+    .chat-container { padding: 16px; }
+    .message-content { max-width: 85%; }
+    .header { padding: 12px 16px; }
+    .header-avatar { width: 40px; height: 40px; font-size: 20px; }
+}
 </style>
 </head>
 <body>
-<div class="cd ct"></div><div class="cd cr"></div><div class="cd cb"></div><div class="cd cb2"></div>
-<div class="c">
-<header class="h">
-<div class="f">
-<div class="p"><div class="e"><div class="b"></div><div class="b"></div></div></div>
-<div class="t"><h1>GENERALIST</h1><span>Model X7 | Neural v3.2</span></div>
-</div>
-<div class="s">
-<div class="i"><div class="l">Core</div><div class="v">ONLINE</div></div>
-<div class="i"><div class="l">Neural</div><div class="m"><div class="a"></div><div class="a"></div><div class="a"></div><div class="a"></div></div></div>
-<div class="i"><div class="l">Latency</div><div class="v">24ms</div></div>
-</div>
+
+<header class="header">
+    <div class="header-left">
+        <div class="header-avatar">🤖</div>
+        <div class="header-info">
+            <h1>Generalist AI</h1>
+            <span>Powered by OpenHands</span>
+        </div>
+    </div>
+    <div class="header-status">
+        <div class="status-dot"></div>
+        <span class="status-text">Online</span>
+    </div>
 </header>
-<div class="ca" id="chatArea">
-<div class="msg bot"><div class="mh"><div class="mi">&#x1F916;</div><div class="ms">Generalist-X7</div><div class="mt">System Online</div></div><div class="mk">systems initialized. neural pathways active. ready for interaction.<br>what can i process for you today?</div></div>
+
+<div class="chat-container">
+    <div class="messages" id="messages">
+        <div class="message bot">
+            <div class="message-avatar">🤖</div>
+            <div>
+                <div class="message-content">
+                    Halo! 👋 Saya Generalist AI, asisten virtual yang siap membantu Anda. 
+
+Ada yang bisa saya bantu hari ini? 😊
+                </div>
+                <div class="message-time">Just now</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <button class="quick-btn" onclick="quickMessage('Apa kabar?')">🙋‍♂️ Apa kabar?</button>
+        <button class="quick-btn" onclick="quickMessage('Jelaskan tentang AI')">🤖 AI是什么?</button>
+        <button class="quick-btn" onclick="quickMessage('Bantu coding Python')">💻 Coding</button>
+        <button class="quick-btn" onclick="quickMessage('Ceritakan lelucon')">😄 Lelucon</button>
+    </div>
 </div>
-<div class="ia">
-<div class="ic">
-<div class="if"><input type="text" id="userInput" placeholder="Enter command..." onkeypress="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();sendMessage()}"></div>
-<button class="sb" onclick="sendMessage()" id="sendBtn"><svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg></button>
+
+<div class="input-area">
+    <div class="input-container">
+        <div class="input-wrapper">
+            <input type="text" id="userInput" placeholder="Ketik pesan Anda..." onkeypress="handleEnter(event)">
+        </div>
+        <button class="send-btn" onclick="sendMessage()" id="sendBtn">
+            <svg viewBox="0 0 24 24"><path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/></svg>
+        </button>
+    </div>
 </div>
-</div>
-</div>
+
 <script>
-var API_KEY='sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
-var API_BASE='https://app.all-hands.dev/api/v1';
-var isProcessing=false;
+var API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
+var API_BASE = 'https://app.all-hands.dev/api/v1';
+var isProcessing = false;
 
-function handleEnter(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
-
-async function sendMessage(){
-    var input=document.getElementById('userInput');
-    var message=input.value.trim();
-    if(!message||isProcessing)return;
-    
-    addMessage(message,'user');
-    input.value='';
-    showTyping();
-    isProcessing=true;
-    document.getElementById('sendBtn').disabled=true;
-    document.getElementById('userInput').disabled=true;
-
-    try{
-        var convId=await createConversation(message);
-        if(convId){
-            await pollForResponse(convId);
-        }else{
-            hideTyping();
-            addMessage('connection error: failed to establish link','bot');
-        }
-    }catch(e){
-        hideTyping();
-        addMessage('system error: '+e.message,'bot');
-    }
-    
-    isProcessing=false;
-    document.getElementById('sendBtn').disabled=false;
-    document.getElementById('userInput').disabled=false;
-    document.getElementById('userInput').focus();
+function quickMessage(msg) {
+    document.getElementById('userInput').value = msg;
+    sendMessage();
 }
 
-async function createConversation(message){
-    var res=await fetch(API_BASE+'/app-conversations',{
-        method:'POST',
-        headers:{'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json'},
-        body:JSON.stringify({initial_message:{content:[{type:"text",text:message}]}})
+function handleEnter(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage();
+    }
+}
+
+async function sendMessage() {
+    var input = document.getElementById('userInput');
+    var message = input.value.trim();
+    if (!message || isProcessing) return;
+
+    addMessage(message, 'user');
+    input.value = '';
+    showTyping();
+    isProcessing = true;
+    document.getElementById('sendBtn').disabled = true;
+
+    try {
+        var convId = await createConversation(message);
+        if (convId) {
+            await pollForResponse(convId);
+        } else {
+            hideTyping();
+            addMessage('Maaf, terjadi kesalahan koneksi. Silakan coba lagi. 🔄', 'bot');
+        }
+    } catch (e) {
+        hideTyping();
+        addMessage('Terjadi kesalahan: ' + e.message + ' ❌', 'bot');
+    }
+
+    isProcessing = false;
+    document.getElementById('sendBtn').disabled = false;
+}
+
+async function createConversation(message) {
+    var res = await fetch(API_BASE + '/app-conversations', {
+        method: 'POST',
+        headers: {
+            'Authorization': 'Bearer ' + API_KEY,
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+            initial_message: {
+                content: [{ type: "text", text: message }]
+            }
+        })
     });
-    if(!res.ok)return null;
-    var data=await res.json();
-    if(data.app_conversation_id){return data.app_conversation_id;}
-    else if(data.id){
-        for(var i=0;i<30;i++){
+
+    if (!res.ok) return null;
+    var data = await res.json();
+
+    if (data.app_conversation_id) {
+        return data.app_conversation_id;
+    } else if (data.id) {
+        for (var i = 0; i < 30; i++) {
             await sleep(2000);
-            var r=await fetch(API_BASE+'/app-conversations/start-tasks?ids='+data.id,{
-                headers:{'Authorization':'Bearer '+API_KEY}
+            var r = await fetch(API_BASE + '/app-conversations/start-tasks?ids=' + data.id, {
+                headers: { 'Authorization': 'Bearer ' + API_KEY }
             });
-            if(r.ok){
-                var tasks=await r.json();
-                var task=tasks[0];
-                if(task&&task.status==='READY'&&task.app_conversation_id){return task.app_conversation_id;}
+            if (r.ok) {
+                var tasks = await r.json();
+                var task = tasks[0];
+                if (task && task.status === 'READY' && task.app_conversation_id) {
+                    return task.app_conversation_id;
+                }
             }
         }
     }
     return null;
 }
 
-async function pollForResponse(convId){
-    var lastIndex=0;
-    var maxPolls=40;
-    var pollCount=0;
-    
-    while(pollCount<maxPolls){
-        try{
-            var res=await fetch(API_BASE+'/conversation/'+convId+'/events/search?limit=50',{
-                headers:{'Authorization':'Bearer '+API_KEY,'Accept':'application/json'}
+async function pollForResponse(convId) {
+    var lastIndex = 0;
+    var pollCount = 0;
+
+    while (pollCount < 40) {
+        try {
+            var res = await fetch(API_BASE + '/conversation/' + convId + '/events/search?limit=50', {
+                headers: {
+                    'Authorization': 'Bearer ' + API_KEY,
+                    'Accept': 'application/json'
+                }
             });
-            
-            if(!res.ok){
+
+            if (!res.ok) {
                 await sleep(2000);
                 pollCount++;
                 continue;
             }
-            
-            var data=await res.json();
-            var events=data.items||[];
-            
-            for(var i=lastIndex;i<events.length;i++){
-                var event=events[i];
-                
-                // Handle MessageEvent from agent/assistant
-                if(event.kind==='MessageEvent'&&(event.source==='assistant'||event.source==='agent')){
-                    var content=event.llm_message&&event.llm_message.content;
-                    if(content){
-                        var text=extractText(content);
-                        if(text&&text.trim()){
+
+            var data = await res.json();
+            var events = data.items || [];
+
+            for (var i = lastIndex; i < events.length; i++) {
+                var event = events[i];
+
+                // Message from agent
+                if (event.kind === 'MessageEvent' && (event.source === 'agent' || event.source === 'assistant')) {
+                    var content = event.llm_message && event.llm_message.content;
+                    if (content) {
+                        var text = extractText(content);
+                        if (text && text.trim()) {
                             hideTyping();
-                            addMessage(text,'bot');
+                            addMessage(text, 'bot');
                         }
                     }
                 }
-                
-                // Handle ObservationEvent
-                if(event.kind==='ObservationEvent'){
-                    var obs=event.observation;
-                    var content='';
-                    if(obs){
-                        if(obs.content){
-                            content=extractText(obs.content);
-                        }else if(obs.output){
-                            content=extractText(obs.output);
-                        }
+
+                // Observation events
+                if (event.kind === 'ObservationEvent') {
+                    var obs = event.observation;
+                    var content = '';
+                    if (obs) {
+                        if (obs.content) content = extractText(obs.content);
+                        else if (obs.output) content = extractText(obs.output);
                     }
-                    if(content&&content.trim()){
+                    if (content && content.trim()) {
                         hideTyping();
-                        addMessage(content,'bot');
+                        addMessage(content, 'bot');
                     }
                 }
-                
-                // Check for finished
-                if(event.kind==='ConversationStateUpdateEvent'&&event.key==='execution_status'&&event.value==='finished'){
+
+                // Check finished
+                if (event.kind === 'ConversationStateUpdateEvent' &&
+                    event.key === 'execution_status' && event.value === 'finished') {
                     return;
                 }
             }
-            
-            lastIndex=events.length;
-            
-        }catch(e){
-            console.log('Poll error:',e);
+
+            lastIndex = events.length;
+
+        } catch (e) {
+            console.log('Poll error:', e);
         }
-        
+
         pollCount++;
         await sleep(2000);
     }
-}
 
-function extractText(content){
-    if(typeof content==='string')return content;
-    if(Array.isArray(content)){
-        return content.map(function(c){return c.text||c.content||'';}).join(' ').trim();
-    }
-    if(content&&content.text)return content.text;
-    return'';
-}
-
-function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms);});}
-
-function addMessage(content,type){
-    var container=document.getElementById('chatArea');
-    var time=new Date().toLocaleTimeString('en-US',{hour12:false});
-    var div=document.createElement('div');
-    div.className='msg '+type;
-    div.innerHTML='<div class="mh"><div class="mi">'+(type==='bot'?'&#x1F916;':'&#x1F464;')+'</div><div class="ms">'+(type==='bot'?'Generalist-X7':'User')+'</div><div class="mt">'+time+'</div></div><div class="mk">'+escapeHtml(content)+'</div>';
-    container.appendChild(div);
-    container.scrollTop=container.scrollHeight;
-}
-
-function showTyping(){
     hideTyping();
-    var container=document.getElementById('chatArea');
-    var div=document.createElement('div');
-    div.id='typing';
-    div.className='tp';
-    div.innerHTML='<div class="pv"><div class="pb"></div><div class="pb"></div><div class="pb"></div><div class="pb"></div><div class="pb"></div></div><div class="pt">Processing</div>';
+    addMessage('Waktu respons habis. Coba lagi ya! ⏰', 'bot');
+}
+
+function extractText(content) {
+    if (typeof content === 'string') return content;
+    if (Array.isArray(content)) {
+        return content.map(function(c) { return c.text || c.content || ''; }).join(' ').trim();
+    }
+    if (content && content.text) return content.text;
+    return '';
+}
+
+function sleep(ms) { return new Promise(function(resolve) { setTimeout(resolve, ms); }); }
+
+function addMessage(content, type) {
+    var container = document.getElementById('messages');
+    var time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    var avatar = type === 'bot' ? '🤖' : '👤';
+    var div = document.createElement('div');
+    div.className = 'message ' + type;
+    div.innerHTML = '<div class="message-avatar">' + avatar + '</div><div><div class="message-content">' + escapeHtml(content) + '</div><div class="message-time">' + time + '</div></div>';
     container.appendChild(div);
-    container.scrollTop=container.scrollHeight;
+    container.scrollTop = container.scrollHeight;
 }
 
-function hideTyping(){
-    var typing=document.getElementById('typing');
-    if(typing)typing.remove();
+function showTyping() {
+    hideTyping();
+    var container = document.getElementById('messages');
+    var div = document.createElement('div');
+    div.id = 'typing';
+    div.className = 'message bot';
+    div.innerHTML = '<div class="message-avatar">🤖</div><div class="typing-indicator"><div class="typing-dots"><span></span><span></span><span></span></div><div class="typing-text">Mengetik...</div></div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
 
-function escapeHtml(text){
-    var div=document.createElement('div');
-    div.textContent=text;
+function hideTyping() {
+    var typing = document.getElementById('typing');
+    if (typing) typing.remove();
+}
+
+function escapeHtml(text) {
+    var div = document.createElement('div');
+    div.textContent = text;
     return div.innerHTML;
 }
 </script>
