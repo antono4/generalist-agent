@@ -446,39 +446,14 @@
                 console.log(`New events to process: ${newEvents.length}`);
                 
                 // Process events
+                let pendingFinish = false;
+                
                 for (const event of newEvents) {
                     lastEventId = event.id;
                     
-                    // Check for execution status
-                    if (event.kind === 'ConversationStateUpdateEvent') {
-                        if (event.key === 'execution_status') {
-                            if (event.value === 'finished') {
-                                executionFinished = true;
-                                stopPolling();
-                                hideTyping();
-                                addMessage('\n\n✅ Task completed!', 'bot');
-                            }
-                        }
-                    }
-                    
-                    // Get assistant messages - check llm_message for the actual content
-                    if (event.kind === 'MessageEvent' && event.source === 'assistant') {
-                        // Try llm_message first (actual assistant response)
-                        const llmMsg = event.llm_message;
-                        const content = llmMsg?.content || event.message?.content;
-                        if (content) {
-                            hideTyping();
-                            const text = extractText(content);
-                            if (text && text.trim()) {
-                                addMessage(text, 'bot');
-                            }
-                        }
-                    }
-                    
-                    // Get tool outputs from observations (including finish tool)
+                    // Get tool outputs from observations FIRST (before checking finish)
                     if (event.kind === 'ObservationEvent' && event.source === 'environment') {
                         const obs = event.observation;
-                        // Handle different observation formats
                         let content = '';
                         if (obs?.content) {
                             content = extractText(obs.content);
@@ -490,6 +465,36 @@
                             addMessage(content, 'bot');
                         }
                     }
+                    
+                    // Get assistant messages
+                    if (event.kind === 'MessageEvent' && event.source === 'assistant') {
+                        const llmMsg = event.llm_message;
+                        const content = llmMsg?.content || event.message?.content;
+                        if (content) {
+                            hideTyping();
+                            const text = extractText(content);
+                            if (text && text.trim()) {
+                                addMessage(text, 'bot');
+                            }
+                        }
+                    }
+                    
+                    // Check for execution status LAST
+                    if (event.kind === 'ConversationStateUpdateEvent') {
+                        if (event.key === 'execution_status') {
+                            if (event.value === 'finished') {
+                                pendingFinish = true;
+                            }
+                        }
+                    }
+                }
+                
+                // Only mark finished AFTER processing all events
+                if (pendingFinish) {
+                    executionFinished = true;
+                    stopPolling();
+                    hideTyping();
+                    addMessage('\n\n✅ Task completed!', 'bot');
                 }
                 
             } catch (error) {
