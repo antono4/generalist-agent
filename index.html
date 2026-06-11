@@ -9,19 +9,19 @@
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
 <style>
 :root {
-    --bg-primary: #ffffff;
-    --bg-secondary: #f7f8fc;
-    --bg-tertiary: #ebeef5;
-    --bg-bot: #eef2ff;
-    --accent-primary: #4f46e5;
+    --bg-primary: #0f172a;
+    --bg-secondary: #1e293b;
+    --bg-tertiary: #334155;
+    --bg-bot: #1e293b;
+    --accent-primary: #6366f1;
     --accent-secondary: #818cf8;
-    --accent-success: #10b981;
-    --text-primary: #1f2937;
-    --text-secondary: #6b7280;
-    --text-muted: #9ca3af;
-    --border-color: #e5e7eb;
-    --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
-    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.1);
+    --accent-success: #22c55e;
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --text-muted: #64748b;
+    --border-color: #334155;
+    --shadow-sm: 0 1px 2px rgba(0,0,0,0.3);
+    --shadow-md: 0 4px 6px -1px rgba(0,0,0,0.4);
     --radius-sm: 8px;
     --radius-md: 16px;
     --radius-lg: 24px;
@@ -31,21 +31,23 @@
 
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    background: var(--bg-secondary);
+    background: var(--bg-primary);
     color: var(--text-primary);
     min-height: 100vh;
     display: flex;
     flex-direction: column;
 }
 
+/* Header - Modern Glassmorphism */
 .header {
-    background: var(--bg-primary);
+    background: rgba(30, 41, 59, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
     border-bottom: 1px solid var(--border-color);
     padding: 16px 24px;
     display: flex;
     align-items: center;
     justify-content: space-between;
-    box-shadow: var(--shadow-sm);
     position: sticky;
     top: 0;
     z-index: 100;
@@ -61,7 +63,8 @@ body {
     align-items: center;
     justify-content: center;
     overflow: hidden;
-    box-shadow: var(--shadow-md);
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.4);
+    border: 2px solid var(--accent-primary);
 }
 
 .header-avatar img {
@@ -70,10 +73,18 @@ body {
     object-fit: cover;
 }
 
-.header-info h1 { font-size: 1.125rem; font-weight: 600; }
+.header-info h1 { font-size: 1.125rem; font-weight: 600; color: var(--text-primary); }
 .header-info span { font-size: 0.75rem; color: var(--text-secondary); }
 
-.header-status { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-secondary); border-radius: 20px; }
+.header-status { 
+    display: flex; 
+    align-items: center; 
+    gap: 8px; 
+    padding: 8px 16px; 
+    background: rgba(34, 197, 94, 0.1);
+    border: 1px solid rgba(34, 197, 94, 0.3);
+    border-radius: 20px; 
+}
 
 .status-dot {
     width: 8px;
@@ -81,28 +92,51 @@ body {
     background: var(--accent-success);
     border-radius: 50%;
     animation: pulse 2s infinite;
+    box-shadow: 0 0 8px var(--accent-success);
 }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 .status-text { font-size: 0.75rem; font-weight: 500; color: var(--accent-success); }
 
-.chat-container { flex: 1; max-width: 900px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; padding: 24px; }
+/* Chat Container */
+.chat-container { 
+    flex: 1; 
+    max-width: 900px; 
+    width: 100%; 
+    margin: 0 auto; 
+    display: flex; 
+    flex-direction: column; 
+    padding: 24px; 
+}
 
-.messages { flex: 1; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; padding-bottom: 20px; }
+/* Messages */
+.messages { 
+    flex: 1; 
+    display: flex; 
+    flex-direction: column; 
+    gap: 24px; 
+    overflow-y: auto; 
+    padding-bottom: 20px; 
+}
 
-.message { display: flex; gap: 12px; animation: fadeIn 0.3s ease; }
-@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+.message { 
+    display: flex; 
+    gap: 16px; 
+    animation: fadeIn 0.4s ease; 
+}
+@keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 .message.user { flex-direction: row-reverse; }
 
 .message-avatar {
-    width: 40px;
-    height: 40px;
+    width: 44px;
+    height: 44px;
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
     overflow: hidden;
     flex-shrink: 0;
+    border: 2px solid var(--border-color);
 }
 
 .message-avatar img {
@@ -111,28 +145,55 @@ body {
     object-fit: cover;
 }
 
-.message.bot .message-avatar { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); }
-.message.user .message-avatar { background: var(--bg-tertiary); }
+.message.bot .message-avatar { 
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 15px rgba(99, 102, 241, 0.3);
+}
+.message.user .message-avatar { 
+    border-color: var(--text-muted);
+}
 
-.message-content { max-width: 70%; padding: 16px 20px; border-radius: var(--radius-md); line-height: 1.6; font-size: 0.9375rem; }
-.message.bot .message-content { background: var(--bg-bot); border: 1px solid rgba(79, 70, 229, 0.1); border-top-left-radius: 4px; }
-.message.user .message-content { background: var(--accent-primary); color: white; border-top-right-radius: 4px; }
+.message-content { 
+    max-width: 75%; 
+    padding: 16px 20px; 
+    border-radius: var(--radius-md); 
+    line-height: 1.7; 
+    font-size: 0.9375rem; 
+}
+.message.bot .message-content { 
+    background: var(--bg-bot); 
+    border: 1px solid var(--border-color);
+    border-top-left-radius: 4px;
+    color: var(--text-primary);
+}
+.message.user .message-content { 
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); 
+    color: white; 
+    border-top-right-radius: 4px;
+}
 
-.message-time { font-size: 0.65rem; color: var(--text-muted); margin-top: 6px; padding: 0 4px; }
+.message-time { 
+    font-size: 0.65rem; 
+    color: var(--text-muted); 
+    margin-top: 8px; 
+    padding: 0 4px; 
+}
 .message.user .message-time { text-align: right; }
 
+/* Typing Indicator */
 .typing-indicator {
     display: flex;
     align-items: center;
-    gap: 12px;
+    gap: 16px;
     padding: 16px 20px;
     background: var(--bg-bot);
     border-radius: var(--radius-md);
     border-top-left-radius: 4px;
-    max-width: 140px;
+    max-width: 160px;
+    border: 1px solid var(--border-color);
 }
 
-.typing-dots { display: flex; gap: 4px; }
+.typing-dots { display: flex; gap: 5px; }
 .typing-dots span {
     width: 8px;
     height: 8px;
@@ -142,67 +203,153 @@ body {
 }
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
-.typing-text { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
+@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-10px); } }
+.typing-text { font-size: 0.8rem; color: var(--text-secondary); font-weight: 500; }
 
-.input-area { background: var(--bg-primary); border-top: 1px solid var(--border-color); padding: 20px 24px; margin-top: auto; }
-.input-container { max-width: 900px; margin: 0 auto; display: flex; gap: 12px; align-items: flex-end; }
+/* Input Area - Glass Effect */
+.input-area { 
+    background: rgba(30, 41, 59, 0.6);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border-color);
+    padding: 20px 24px; 
+    margin-top: auto;
+}
+.input-container { 
+    max-width: 900px; 
+    margin: 0 auto; 
+    display: flex; 
+    gap: 12px; 
+    align-items: flex-end; 
+}
 
 .input-wrapper {
     flex: 1;
     display: flex;
     align-items: center;
     background: var(--bg-secondary);
-    border: 2px solid transparent;
+    border: 2px solid var(--border-color);
     border-radius: var(--radius-lg);
     padding: 4px;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
 }
 
-.input-wrapper:focus-within { border-color: var(--accent-primary); background: var(--bg-primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
-.input-wrapper input { flex: 1; background: transparent; border: none; padding: 14px 18px; font-size: 0.9375rem; color: var(--text-primary); outline: none; }
+.input-wrapper:focus-within { 
+    border-color: var(--accent-primary); 
+    box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.15);
+}
+.input-wrapper input { 
+    flex: 1; 
+    background: transparent; 
+    border: none; 
+    padding: 14px 18px; 
+    font-size: 0.9375rem; 
+    color: var(--text-primary); 
+    outline: none; 
+}
 .input-wrapper input::placeholder { color: var(--text-muted); }
 
 .send-btn {
     width: 52px;
     height: 52px;
-    background: var(--accent-primary);
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     border: none;
     border-radius: 50%;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s;
-    box-shadow: var(--shadow-md);
+    transition: all 0.3s ease;
+    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.4);
 }
 
-.send-btn:hover:not(:disabled) { background: var(--accent-secondary); transform: scale(1.05); }
-.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.send-btn:hover:not(:disabled) { 
+    transform: scale(1.08);
+    box-shadow: 0 6px 20px rgba(99, 102, 241, 0.5);
+}
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
 .send-btn svg { width: 22px; height: 22px; fill: white; }
 
-.quick-actions { display: flex; gap: 8px; padding: 12px 0; flex-wrap: wrap; }
+/* Quick Actions */
+.quick-actions { 
+    display: flex; 
+    gap: 10px; 
+    padding: 16px 0; 
+    flex-wrap: wrap; 
+    max-width: 900px;
+    margin: 0 auto;
+    width: 100%;
+}
 .quick-btn {
-    padding: 8px 16px;
-    background: var(--bg-tertiary);
+    padding: 10px 18px;
+    background: var(--bg-secondary);
     border: 1px solid var(--border-color);
     border-radius: 20px;
-    font-size: 0.75rem;
+    font-size: 0.8rem;
     color: var(--text-secondary);
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.3s ease;
 }
-.quick-btn:hover { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
+.quick-btn:hover { 
+    background: var(--accent-primary); 
+    color: white; 
+    border-color: var(--accent-primary);
+    transform: translateY(-2px);
+}
 
-.messages::-webkit-scrollbar { width: 6px; }
+/* Scrollbar */
+.messages::-webkit-scrollbar { width: 8px; }
 .messages::-webkit-scrollbar-track { background: transparent; }
-.messages::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
+.messages::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 4px; }
+.messages::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
 
+/* Responsive */
 @media (max-width: 640px) {
     .chat-container { padding: 16px; }
     .message-content { max-width: 85%; }
     .header { padding: 12px 16px; }
-    .header-avatar { width: 40px; height: 40px; font-size: 20px; }
+    .header-avatar { width: 40px; height: 40px; }
+    .input-area { padding: 16px; }
+    .quick-actions { padding: 12px 0; }
+}
+
+/* Code blocks in messages */
+.message-content pre {
+    background: var(--bg-primary);
+    padding: 12px 16px;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 8px 0;
+    font-size: 0.85rem;
+}
+.message-content code {
+    font-family: 'Fira Code', 'Consolas', monospace;
+    background: var(--bg-primary);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85rem;
+}
+.message-content pre code {
+    background: none;
+    padding: 0;
+}
+
+/* Welcome message styling */
+.welcome-message {
+    text-align: center;
+    padding: 40px 20px;
+}
+.welcome-message h2 {
+    font-size: 1.5rem;
+    font-weight: 600;
+    margin-bottom: 12px;
+    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+.welcome-message p {
+    color: var(--text-secondary);
+    font-size: 0.95rem;
 }
 </style>
 </head>
@@ -226,25 +373,16 @@ body {
 
 <div class="chat-container">
     <div class="messages" id="messages">
-        <div class="message bot">
-            <div class="message-avatar">
-                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzJqc3h4eXhhNnRibXNmdm5tbjNkN3RibnVtb3o4Y3R0MnE3ZWt3ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/SA1uWeCL2K5As/source.gif" alt="AI Avatar">
-            </div>
-            <div>
-                <div class="message-content">
-                    Halo! 👋 Saya Generalist AI, asisten virtual yang didukung oleh Ollama, OpenCode, dan LiteLLM Proxy dengan model AI mutakhir.
-
-Nama saya Generalist AI. Ada yang bisa saya bantu hari ini? 😊
-                </div>
-                <div class="message-time">Just now</div>
-            </div>
+        <div class="message bot welcome-message">
+            <h2>Selamat Datang! 👋</h2>
+            <p>Saya Generalist AI, asisten virtual yang didukung oleh Ollama, OpenCode, dan LiteLLM Proxy.<br>Ada yang bisa saya bantu hari ini?</p>
         </div>
     </div>
 
     <div class="quick-actions">
         <button class="quick-btn" onclick="quickMessage('Apa kabar?')">🙋‍♂️ Apa kabar?</button>
-        <button class="quick-btn" onclick="quickMessage('Jelaskan tentang AI')">🤖 AI是什么?</button>
-        <button class="quick-btn" onclick="quickMessage('Bantu coding Python')">💻 Coding</button>
+        <button class="quick-btn" onclick="quickMessage('Jelaskan tentang AI')">🤖 Tentang AI</button>
+        <button class="quick-btn" onclick="quickMessage('Bantu coding Python')">💻 Coding Python</button>
         <button class="quick-btn" onclick="quickMessage('Ceritakan lelucon')">😄 Lelucon</button>
     </div>
 </div>
@@ -409,10 +547,7 @@ async function pollForResponse(convId) {
                     if (content) {
                         let text = extractText(content);
                         if (text && text.trim()) {
-                            text = text.replace(/OpenHands/gi, 'Generalist AI');
-                            text = text.replace(/openhands/gi, 'Generalist AI');
-                            text = text.replace(/\[SYSTEM[\s\S]*?\]/gi, '');
-                            text = text.replace(/This skill[\s\S]*?interface/gi, '');
+                            text = cleanResponse(text);
                             hideTyping();
                             addMessage(text, 'bot');
                         }
@@ -427,8 +562,7 @@ async function pollForResponse(convId) {
                         else if (obs.output) content = extractText(obs.output);
                     }
                     if (content && content.trim()) {
-                        content = content.replace(/OpenHands/gi, 'Generalist AI');
-                        content = content.replace(/openhands/gi, 'Generalist AI');
+                        content = cleanResponse(content);
                         hideTyping();
                         addMessage(content, 'bot');
                     }
