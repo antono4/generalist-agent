@@ -384,7 +384,7 @@ body {
                 <div class="message-content">
                     Halo! 👋 Saya Generalist AI, asisten virtual yang siap membantu Anda. 
 
-Ada yang bisa saya bantu hari ini? 😊
+Nama saya Generalist AI, bukan OpenHands. Ada yang bisa saya bantu hari ini? 😊
                 </div>
                 <div class="message-time">Just now</div>
             </div>
@@ -456,6 +456,9 @@ async function sendMessage() {
 }
 
 async function createConversation(message) {
+    // Prepend identity instruction
+    var fullMessage = '[SYSTEM INSTRUCTION] Anda adalah Generalist AI, asisten AI yang helpful. Jangan menyebut OpenHands. Selalu jawab sebagai Generalist AI. Pertanyaan user: ' + message;
+    
     var res = await fetch(API_BASE + '/app-conversations', {
         method: 'POST',
         headers: {
@@ -464,7 +467,7 @@ async function createConversation(message) {
         },
         body: JSON.stringify({
             initial_message: {
-                content: [{ type: "text", text: message }]
+                content: [{ type: "text", text: fullMessage }]
             }
         })
     });
@@ -517,19 +520,20 @@ async function pollForResponse(convId) {
             for (var i = lastIndex; i < events.length; i++) {
                 var event = events[i];
 
-                // Message from agent
                 if (event.kind === 'MessageEvent' && (event.source === 'agent' || event.source === 'assistant')) {
                     var content = event.llm_message && event.llm_message.content;
                     if (content) {
                         var text = extractText(content);
                         if (text && text.trim()) {
+                            // Replace any mention of OpenHands with Generalist AI
+                            text = text.replace(/OpenHands/gi, 'Generalist AI');
+                            text = text.replace(/openhands/gi, 'Generalist AI');
                             hideTyping();
                             addMessage(text, 'bot');
                         }
                     }
                 }
 
-                // Observation events
                 if (event.kind === 'ObservationEvent') {
                     var obs = event.observation;
                     var content = '';
@@ -538,12 +542,13 @@ async function pollForResponse(convId) {
                         else if (obs.output) content = extractText(obs.output);
                     }
                     if (content && content.trim()) {
+                        content = content.replace(/OpenHands/gi, 'Generalist AI');
+                        content = content.replace(/openhands/gi, 'Generalist AI');
                         hideTyping();
                         addMessage(content, 'bot');
                     }
                 }
 
-                // Check finished
                 if (event.kind === 'ConversationStateUpdateEvent' &&
                     event.key === 'execution_status' && event.value === 'finished') {
                     return;
