@@ -5,19 +5,13 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Generalist Agent - AI Assistant</title>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             min-height: 100vh;
             color: #fff;
         }
-        
         .container {
             max-width: 900px;
             margin: 0 auto;
@@ -26,27 +20,19 @@
             display: flex;
             flex-direction: column;
         }
-        
         header {
             text-align: center;
             padding: 30px 0;
             border-bottom: 1px solid rgba(255,255,255,0.1);
             margin-bottom: 20px;
         }
-        
         h1 {
             font-size: 2.5rem;
             background: linear-gradient(90deg, #00d9ff, #00ff88);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
-            margin-bottom: 10px;
         }
-        
-        .subtitle {
-            color: #8892b0;
-            font-size: 1rem;
-        }
-        
+        .subtitle { color: #8892b0; font-size: 1rem; }
         .chat-container {
             flex: 1;
             display: flex;
@@ -56,28 +42,18 @@
             border: 1px solid rgba(255,255,255,0.1);
             overflow: hidden;
         }
-        
         .chat-messages {
             flex: 1;
             padding: 20px;
             overflow-y: auto;
             max-height: 60vh;
         }
-        
-        .message {
-            margin-bottom: 20px;
-            animation: fadeIn 0.3s ease;
-        }
-        
+        .message { margin-bottom: 20px; animation: fadeIn 0.3s ease; }
         @keyframes fadeIn {
             from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        .message.user {
-            text-align: right;
-        }
-        
+        .message.user { text-align: right; }
         .message-content {
             display: inline-block;
             padding: 15px 20px;
@@ -85,32 +61,27 @@
             max-width: 80%;
             line-height: 1.6;
         }
-        
         .message.bot .message-content {
             background: rgba(0,217,255,0.1);
             border: 1px solid rgba(0,217,255,0.3);
             border-bottom-left-radius: 5px;
         }
-        
         .message.user .message-content {
             background: linear-gradient(90deg, #00d9ff, #00ff88);
             color: #1a1a2e;
             border-bottom-right-radius: 5px;
         }
-        
         .message-agent {
             font-size: 0.75rem;
             color: #00ff88;
             margin-bottom: 5px;
             font-weight: 600;
         }
-        
         .typing-indicator {
             display: flex;
             gap: 5px;
             padding: 15px 20px;
         }
-        
         .typing-indicator span {
             width: 8px;
             height: 8px;
@@ -118,26 +89,18 @@
             border-radius: 50%;
             animation: bounce 1.4s infinite;
         }
-        
         .typing-indicator span:nth-child(2) { animation-delay: 0.2s; }
         .typing-indicator span:nth-child(3) { animation-delay: 0.4s; }
-        
         @keyframes bounce {
             0%, 80%, 100% { transform: translateY(0); }
             40% { transform: translateY(-10px); }
         }
-        
         .input-container {
             padding: 20px;
             background: rgba(0,0,0,0.2);
             border-top: 1px solid rgba(255,255,255,0.1);
         }
-        
-        .input-wrapper {
-            display: flex;
-            gap: 10px;
-        }
-        
+        .input-wrapper { display: flex; gap: 10px; }
         input[type="text"] {
             flex: 1;
             padding: 15px 20px;
@@ -149,15 +112,8 @@
             outline: none;
             transition: border-color 0.3s;
         }
-        
-        input[type="text"]:focus {
-            border-color: #00d9ff;
-        }
-        
-        input[type="text"]::placeholder {
-            color: #8892b0;
-        }
-        
+        input[type="text"]:focus { border-color: #00d9ff; }
+        input[type="text"]::placeholder { color: #8892b0; }
         button {
             padding: 15px 30px;
             border: none;
@@ -167,62 +123,17 @@
             font-size: 1rem;
             font-weight: 600;
             cursor: pointer;
-            transition: transform 0.2s, box-shadow 0.2s;
+            transition: transform 0.2s;
         }
-        
-        button:hover {
-            transform: scale(1.05);
-            box-shadow: 0 5px 20px rgba(0,217,255,0.4);
-        }
-        
-        button:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-            transform: none;
-        }
-        
+        button:hover { transform: scale(1.05); }
+        button:disabled { opacity: 0.5; cursor: not-allowed; }
         .status {
             text-align: center;
             padding: 10px;
             font-size: 0.85rem;
             color: #8892b0;
         }
-        
-        .status.online {
-            color: #00ff88;
-        }
-        
-        .agent-info {
-            background: rgba(0,255,136,0.1);
-            border: 1px solid rgba(0,255,136,0.3);
-            border-radius: 10px;
-            padding: 15px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-        
-        .agent-info h3 {
-            color: #00ff88;
-            margin-bottom: 5px;
-        }
-        
-        .agent-info p {
-            color: #8892b0;
-            font-size: 0.9rem;
-        }
-
-        pre {
-            background: rgba(0,0,0,0.3);
-            padding: 10px;
-            border-radius: 10px;
-            overflow-x: auto;
-            margin: 10px 0;
-            font-size: 0.85rem;
-        }
-        
-        code {
-            font-family: 'Fira Code', 'Consolas', monospace;
-        }
+        .status.online { color: #00ff88; }
     </style>
 </head>
 <body>
@@ -232,25 +143,12 @@
             <p class="subtitle">AI Assistant powered by OpenHands</p>
         </header>
         
-        <div class="agent-info">
-            <h3>Generalist Agent Active</h3>
-            <p>Versatile AI for coding, web development, automation & more</p>
-        </div>
-        
         <div class="chat-container">
             <div class="chat-messages" id="chatMessages">
                 <div class="message bot">
                     <div class="message-agent">🤖 Generalist Agent</div>
                     <div class="message-content">
-                        Halo! Saya adalah Generalist Agent. Saya bisa membantu Anda dengan:
-                        <br><br>
-                        • Menulis dan edit kode (HTML, CSS, JavaScript, Python, dll)
-                        <br>• Debugging dan fixing issues
-                        <br>• Membuat landing page dan web aplikasi
-                        <br>• Research dan automasi
-                        <br>• Dan masih banyak lagi!
-                        <br><br>
-                        Apa yang bisa saya bantu hari ini? 🚀
+                        Halo! Saya Generalist Agent. Kirim pesan dan saya akan respond! 🚀
                     </div>
                 </div>
             </div>
@@ -269,56 +167,41 @@
     </div>
 
     <script>
-        // OpenHands API Configuration
         const API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
         const API_BASE = 'https://app.all-hands.dev/api/v1';
         
-        let conversationId = null;
-        let lastEventId = null;
-        let processedEventIds = new Set(); // Track all processed event IDs
         let isProcessing = false;
-        let pollInterval = null;
-        let executionFinished = false;
 
         async function sendMessage() {
             const input = document.getElementById('userInput');
             const message = input.value.trim();
-            
             if (!message || isProcessing) return;
             
             addMessage(message, 'user');
             input.value = '';
             showTyping();
             isProcessing = true;
-            executionFinished = false;
             document.getElementById('sendBtn').disabled = true;
             
             try {
-                const result = await callOpenHandsAPI(message);
-                hideTyping();
-                
-                if (result.error) {
-                    addMessage(`Error: ${result.error}`, 'bot');
+                const convId = await createConversation(message);
+                if (convId) {
+                    await pollForResponse(convId);
                 } else {
-                    conversationId = result.conversation_id;
-                    lastEventId = null;
-                    pollCount = 0; // Reset poll counter
-                    
-                    // Start polling for responses
-                    startPolling();
+                    hideTyping();
+                    addMessage('Gagal membuat conversation', 'bot');
                 }
             } catch (error) {
                 hideTyping();
-                stopPolling();
-                addMessage(`Connection error: ${error.message}`, 'bot');
+                addMessage(`Error: ${error.message}`, 'bot');
             }
             
             isProcessing = false;
             document.getElementById('sendBtn').disabled = false;
         }
 
-        async function callOpenHandsAPI(message) {
-            const createRes = await fetch(`${API_BASE}/app-conversations`, {
+        async function createConversation(message) {
+            const res = await fetch(`${API_BASE}/app-conversations`, {
                 method: 'POST',
                 headers: {
                     'Authorization': `Bearer ${API_KEY}`,
@@ -331,187 +214,95 @@
                 })
             });
             
-            if (!createRes.ok) {
-                const err = await createRes.text();
-                return { error: `Failed: ${err}` };
-            }
+            if (!res.ok) return null;
+            const data = await res.json();
             
-            const createData = await createRes.json();
-            
-            if (createData.app_conversation_id) {
-                return { conversation_id: createData.app_conversation_id };
-            } else if (createData.id) {
-                const ready = await pollStartTask(createData.id);
-                if (ready.error) return ready;
-                return { conversation_id: ready.app_conversation_id };
-            }
-            
-            return { error: 'Invalid API response' };
-        }
-
-        async function pollStartTask(taskId) {
-            const maxAttempts = 30;
-            
-            for (let i = 0; i < maxAttempts; i++) {
-                await sleep(2000);
-                
-                const res = await fetch(`${API_BASE}/app-conversations/start-tasks?ids=${taskId}`, {
-                    headers: { 'Authorization': `Bearer ${API_KEY}` }
-                });
-                
-                if (!res.ok) continue;
-                
-                const data = await res.json();
-                const task = Array.isArray(data) ? data[0] : data;
-                
-                if (task?.status === 'READY' && task.app_conversation_id) {
-                    return { app_conversation_id: task.app_conversation_id };
-                }
-            }
-            
-            return { error: 'Timeout waiting for sandbox to start' };
-        }
-
-        function startPolling() {
-            if (pollInterval) clearInterval(pollInterval);
-            
-            pollInterval = setInterval(async () => {
-                await pollForEvents();
-            }, 3000);
-        }
-
-        function stopPolling() {
-            if (pollInterval) {
-                clearInterval(pollInterval);
-                pollInterval = null;
-            }
-        }
-
-        let pollCount = 0;
-        
-        async function pollForEvents() {
-            if (!conversationId || executionFinished) return;
-            
-            pollCount++;
-            console.log(`Poll #${pollCount} at ${new Date().toISOString()}`);
-            
-            try {
-                const res = await fetch(`${API_BASE}/conversation/${conversationId}/events/search?limit=50`, {
-                    headers: { 
-                        'Authorization': `Bearer ${API_KEY}`,
-                        'Accept': 'application/json'
-                    },
-                    mode: 'cors',
-                    credentials: 'omit'
-                });
-                
-                if (!res.ok) {
-                    console.log('Poll failed with status:', res.status);
-                    // If we get 4xx errors repeatedly, something is wrong
-                    if (res.status >= 400 && res.status < 500) {
-                        addMessage(`\n⚠️ API Error (${res.status}). Check API key or conversation ID.`, 'bot');
-                        stopPolling();
+            if (data.app_conversation_id) {
+                return data.app_conversation_id;
+            } else if (data.id) {
+                for (let i = 0; i < 30; i++) {
+                    await sleep(2000);
+                    const readyRes = await fetch(`${API_BASE}/app-conversations/start-tasks?ids=${data.id}`, {
+                        headers: { 'Authorization': `Bearer ${API_KEY}` }
+                    });
+                    if (readyRes.ok) {
+                        const tasks = await readyRes.json();
+                        const task = tasks[0];
+                        if (task?.status === 'READY' && task.app_conversation_id) {
+                            return task.app_conversation_id;
+                        }
                     }
-                    return;
                 }
-                
-                const text = await res.text();
-                let data;
+            }
+            return null;
+        }
+
+        async function pollForResponse(convId) {
+            let lastIndex = 0;
+            
+            while (true) {
                 try {
-                    data = JSON.parse(text);
+                    const res = await fetch(`${API_BASE}/conversation/${convId}/events/search?limit=50`, {
+                        headers: { 'Authorization': `Bearer ${API_KEY}`, 'Accept': 'application/json' }
+                    });
+                    
+                    if (!res.ok) {
+                        await sleep(2000);
+                        continue;
+                    }
+                    
+                    const data = await res.json();
+                    const events = data.items || [];
+                    
+                    // Process new events only
+                    for (let i = lastIndex; i < events.length; i++) {
+                        const event = events[i];
+                        
+                        // Get assistant messages
+                        if (event.kind === 'MessageEvent' && event.source === 'assistant') {
+                            const content = event.llm_message?.content;
+                            if (content) {
+                                const text = extractText(content);
+                                if (text?.trim()) {
+                                    hideTyping();
+                                    addMessage(text, 'bot');
+                                }
+                            }
+                        }
+                        
+                        // Get observation content
+                        if (event.kind === 'ObservationEvent') {
+                            const obs = event.observation;
+                            let content = obs?.content ? extractText(obs.content) : '';
+                            if (!content && obs?.output) content = extractText(obs.output);
+                            if (content?.trim()) {
+                                hideTyping();
+                                addMessage(content, 'bot');
+                            }
+                        }
+                        
+                        // Check finish
+                        if (event.kind === 'ConversationStateUpdateEvent' && 
+                            event.key === 'execution_status' && event.value === 'finished') {
+                            return; // Done
+                        }
+                    }
+                    
+                    lastIndex = events.length;
+                    
                 } catch (e) {
-                    console.log('Failed to parse JSON:', text.substring(0, 200));
-                    return;
+                    console.log('Poll error:', e);
                 }
                 
-                const events = data.items || [];
-                
-                if (events.length === 0) {
-                    console.log('No events in response');
-                    // After 10 polls with no events, show warning
-                    if (pollCount > 10) {
-                        addMessage('\n⏳ Still waiting for agent response...', 'bot');
-                        pollCount = 0; // Reset counter
-                    }
-                    return;
-                }
-                
-                // Debug: log event count
-                console.log(`Events received: ${events.length}, processed: ${processedEventIds.size}`);
-                
-                // Find new events - skip already processed ones using Set
-                const newEvents = events.filter(e => !processedEventIds.has(e.id));
-                
-                console.log(`New events to process: ${newEvents.length}`);
-                
-                // Process events
-                let pendingFinish = false;
-                
-                for (const event of newEvents) {
-                    processedEventIds.add(event.id);
-                    lastEventId = event.id;
-                    
-                    // Get tool outputs from observations FIRST (before checking finish)
-                    if (event.kind === 'ObservationEvent' && event.source === 'environment') {
-                        const obs = event.observation;
-                        console.log('Observation event:', JSON.stringify(obs).substring(0, 300));
-                        let content = '';
-                        if (obs?.content) {
-                            console.log('Has content:', obs.content);
-                            content = extractText(obs.content);
-                        } else if (obs?.output) {
-                            console.log('Has output:', obs.output);
-                            content = typeof obs.output === 'string' ? obs.output : extractText(obs.output);
-                        }
-                        console.log('Extracted content:', content.substring(0, 100));
-                        if (content && content.trim()) {
-                            hideTyping();
-                            addMessage(content, 'bot');
-                        }
-                    }
-                    
-                    // Get assistant messages
-                    if (event.kind === 'MessageEvent' && event.source === 'assistant') {
-                        const llmMsg = event.llm_message;
-                        const content = llmMsg?.content || event.message?.content;
-                        if (content) {
-                            hideTyping();
-                            const text = extractText(content);
-                            if (text && text.trim()) {
-                                addMessage(text, 'bot');
-                            }
-                        }
-                    }
-                    
-                    // Check for execution status LAST
-                    if (event.kind === 'ConversationStateUpdateEvent') {
-                        if (event.key === 'execution_status') {
-                            if (event.value === 'finished') {
-                                pendingFinish = true;
-                            }
-                        }
-                    }
-                }
-                
-                // Only mark finished AFTER processing all events
-                if (pendingFinish) {
-                    executionFinished = true;
-                    stopPolling();
-                    hideTyping();
-                    addMessage('\n\n✅ Task completed!', 'bot');
-                }
-                
-            } catch (error) {
-                console.log('Polling error:', error);
+                await sleep(2500);
             }
         }
 
         function extractText(content) {
             if (typeof content === 'string') return content;
             if (Array.isArray(content)) {
-                return content.map(c => c.text || c.content || '').join('\n').trim();
+                return content.map(c => c.text || '').join('\n').trim();
             }
-            if (content?.text) return content.text;
             return '';
         }
 
@@ -520,21 +311,12 @@
         }
 
         function addMessage(content, type) {
-            if (!content || !content.trim()) return;
-            
             const container = document.getElementById('chatMessages');
             const div = document.createElement('div');
             div.className = `message ${type}`;
-            
-            if (type === 'bot') {
-                div.innerHTML = `
-                    <div class="message-agent">🤖 Generalist Agent</div>
-                    <div class="message-content">${formatContent(content)}</div>
-                `;
-            } else {
-                div.innerHTML = `<div class="message-content">${escapeHtml(content)}</div>`;
-            }
-            
+            div.innerHTML = type === 'bot' 
+                ? `<div class="message-agent">🤖 Generalist Agent</div><div class="message-content">${escapeHtml(content)}</div>`
+                : `<div class="message-content">${escapeHtml(content)}</div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
@@ -545,17 +327,7 @@
             const div = document.createElement('div');
             div.id = 'typing';
             div.className = 'message bot';
-            div.innerHTML = `
-                <div class="message-agent">🤖 Generalist Agent</div>
-                <div class="message-content">
-                    <div class="typing-indicator">
-                        <span></span><span></span><span></span>
-                    </div>
-                    <div style="margin-top: 10px; font-size: 0.85rem; color: #8892b0;">
-                        Connecting to sandbox...
-                    </div>
-                </div>
-            `;
+            div.innerHTML = `<div class="message-agent">🤖 Generalist Agent</div><div class="message-content"><div class="typing-indicator"><span></span><span></span><span></span></div></div>`;
             container.appendChild(div);
             container.scrollTop = container.scrollHeight;
         }
@@ -576,15 +348,6 @@
             const div = document.createElement('div');
             div.textContent = text;
             return div.innerHTML;
-        }
-
-        function formatContent(content) {
-            let formatted = escapeHtml(content);
-            formatted = formatted.replace(/\n/g, '<br>');
-            formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
-            formatted = formatted.replace(/`(.*?)`/g, '<code>$1</code>');
-            formatted = formatted.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
-            return formatted;
         }
     </script>
 </body>
