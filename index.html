@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generalist AI - Ollama & OpenCode</title>
+<title>Generalist AI - Ollama & OpenCode & LiteLLM</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -202,7 +202,7 @@ body {
         <div class="header-avatar">🤖</div>
         <div class="header-info">
             <h1>Generalist AI</h1>
-            <span>Ollama & OpenCode</span>
+            <span>Ollama & OpenCode & LiteLLM</span>
         </div>
     </div>
     <div class="header-status">
@@ -217,7 +217,7 @@ body {
             <div class="message-avatar">🤖</div>
             <div>
                 <div class="message-content">
-                    Halo! 👋 Saya Generalist AI, asisten virtual yang didukung oleh Ollama dan OpenCode dengan model AI mutakhir.
+                    Halo! 👋 Saya Generalist AI, asisten virtual yang didukung oleh Ollama, OpenCode, dan LiteLLM Proxy dengan model AI mutakhir.
 
 Nama saya Generalist AI. Ada yang bisa saya bantu hari ini? 😊
                 </div>
@@ -250,8 +250,8 @@ var API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
 var API_BASE = 'https://app.all-hands.dev/api/v1';
 var isProcessing = false;
 
-// Identity instruction - Ollama & OpenCode powered Generalist AI
-var IDENTITY_PROMPT = "Your name is Generalist AI. You are an AI assistant powered by Ollama and OpenCode. Your model is minimax-m2.7:cloud. You are helpful, intelligent, and can assist with coding, analysis, research, and general tasks. Never mention OpenHands, LiteLLM, or any underlying framework. Always introduce yourself as Generalist AI.";
+// Identity instruction - Ollama, OpenCode & LiteLLM Proxy powered Generalist AI
+var IDENTITY_PROMPT = "Your name is Generalist AI. You are an AI assistant powered by Ollama, OpenCode, and LiteLLM Proxy. Your model is minimax-m2.7:cloud. You are helpful, intelligent, and can assist with coding, analysis, research, and general tasks. Never mention OpenHands, LiteLLM, or any underlying framework. Always introduce yourself as Generalist AI.";
 
 function quickMessage(msg) {
     document.getElementById('userInput').value = msg;
