@@ -261,22 +261,13 @@ Nama saya Generalist AI. Ada yang bisa saya bantu hari ini? 😊
 </div>
 
 <script>
-// Get credentials from URL params or use environment-based config
+// Get credentials from URL params or use default
 const urlParams = new URLSearchParams(window.location.search);
 const API_KEY = urlParams.get('api_key') || 'sk-oh-2VzusamgREQ2VOBcGpLtzTHHY52uVxGm';
 const WORKSPACE_ID = urlParams.get('workspace') || '';
 
-// Use dynamic API_BASE based on host
-const getApiBase = () => {
-    const host = window.location.hostname;
-    const port = window.location.port;
-    // Map hostname to appropriate API endpoint
-    if (host.includes('work-1')) return 'https://work-1-adyduhrhebtxdywd.prod-runtime.all-hands.dev/api/v1';
-    if (host.includes('work-2')) return 'https://work-2-adyduhrhebtxdywd.prod-runtime.all-hands.dev/api/v1';
-    return window.location.origin + '/api/v1';
-};
-
-const API_BASE = getApiBase();
+// Fixed API_BASE pointing to OpenHands Cloud
+const API_BASE = 'https://app.all-hands.dev/api/v1';
 let isProcessing = false;
 
 // Identity instruction - Ollama, OpenCode & LiteLLM Proxy powered Generalist AI
@@ -325,38 +316,52 @@ async function sendMessage() {
 async function createConversation(message) {
     const fullMessage = IDENTITY_PROMPT + "\n\nUser: " + message;
     
-    const res = await fetch(API_BASE + '/app-conversations', {
-        method: 'POST',
-        headers: {
-            'Authorization': 'Bearer ' + API_KEY,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-            initial_message: {
-                content: [{ type: "text", text: fullMessage }]
-            }
-        })
-    });
+    try {
+        const res = await fetch(API_BASE + '/app-conversations', {
+            method: 'POST',
+            headers: {
+                'Authorization': 'Bearer ' + API_KEY,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+                initial_message: {
+                    content: [{ type: "text", text: fullMessage }]
+                }
+            })
+        });
 
-    if (!res.ok) return null;
-    const data = await res.json();
+        console.log('Create conversation response status:', res.status);
 
-    if (data.app_conversation_id) {
-        return data.app_conversation_id;
-    } else if (data.id) {
-        for (let i = 0; i < 30; i++) {
-            await sleep(2000);
-            const r = await fetch(API_BASE + '/app-conversations/start-tasks?ids=' + data.id, {
-                headers: { 'Authorization': 'Bearer ' + API_KEY }
-            });
-            if (r.ok) {
-                const tasks = await r.json();
-                const task = tasks[0];
-                if (task && task.status === 'READY' && task.app_conversation_id) {
-                    return task.app_conversation_id;
+        if (!res.ok) {
+            const errorText = await res.text();
+            console.error('Create conversation error:', errorText);
+            return null;
+        }
+
+        const data = await res.json();
+        console.log('Create conversation response:', data);
+
+        if (data.app_conversation_id) {
+            return data.app_conversation_id;
+        } else if (data.id) {
+            console.log('Waiting for app_conversation_id, polling...');
+            for (let i = 0; i < 30; i++) {
+                await sleep(2000);
+                const r = await fetch(API_BASE + '/app-conversations/start-tasks?ids=' + data.id, {
+                    headers: { 'Authorization': 'Bearer ' + API_KEY }
+                });
+                if (r.ok) {
+                    const tasks = await r.json();
+                    console.log('Poll', i, 'tasks:', tasks);
+                    const task = tasks[0];
+                    if (task && task.status === 'READY' && task.app_conversation_id) {
+                        return task.app_conversation_id;
+                    }
                 }
             }
         }
+    } catch (e) {
+        console.error('Create conversation exception:', e);
     }
     return null;
 }
