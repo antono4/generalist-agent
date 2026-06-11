@@ -275,6 +275,7 @@
         
         let conversationId = null;
         let lastEventId = null;
+        let processedEventIds = new Set(); // Track all processed event IDs
         let isProcessing = false;
         let pollInterval = null;
         let executionFinished = false;
@@ -436,12 +437,10 @@
                 }
                 
                 // Debug: log event count
-                console.log(`Events received: ${events.length}, lastEventId: ${lastEventId}`);
+                console.log(`Events received: ${events.length}, processed: ${processedEventIds.size}`);
                 
-                // Find new events - skip already processed ones
-                const newEvents = lastEventId 
-                    ? events.filter(e => e.id !== lastEventId)
-                    : events;
+                // Find new events - skip already processed ones using Set
+                const newEvents = events.filter(e => !processedEventIds.has(e.id));
                 
                 console.log(`New events to process: ${newEvents.length}`);
                 
@@ -449,17 +448,22 @@
                 let pendingFinish = false;
                 
                 for (const event of newEvents) {
+                    processedEventIds.add(event.id);
                     lastEventId = event.id;
                     
                     // Get tool outputs from observations FIRST (before checking finish)
                     if (event.kind === 'ObservationEvent' && event.source === 'environment') {
                         const obs = event.observation;
+                        console.log('Observation event:', JSON.stringify(obs).substring(0, 300));
                         let content = '';
                         if (obs?.content) {
+                            console.log('Has content:', obs.content);
                             content = extractText(obs.content);
                         } else if (obs?.output) {
+                            console.log('Has output:', obs.output);
                             content = typeof obs.output === 'string' ? obs.output : extractText(obs.output);
                         }
+                        console.log('Extracted content:', content.substring(0, 100));
                         if (content && content.trim()) {
                             hideTyping();
                             addMessage(content, 'bot');
