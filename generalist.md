@@ -129,3 +129,44 @@ When working with HTML files (especially `index.html`):
 - Ensure accessibility (alt texts, ARIA labels when needed)
 - Keep code clean and indented
 - Test in browser after changes
+
+## LLM Configuration
+
+### LiteLLM Proxy Support
+
+When using LiteLLM proxy, set the model format as:
+```
+provider/model-name
+```
+
+### MiniMax M2.7 Model
+
+To use MiniMax M2.7 via LiteLLM proxy:
+
+```bash
+# LiteLLM config example (config.yaml)
+model_list:
+  - model_name: minimax/m2.7
+    litellm_params:
+      model: minimax/m2.7
+      api_key: your-minimax-api-key
+      api_base: https://api.minimax.chat/v1
+```
+
+### Model Reference
+
+- **MiniMax M2.7**: `minimax/m2.7` or `minimax/M2.7`
+- Use via LiteLLM proxy for unified API access
+- Supports chat completions and function calling
+
+### Environment Variables
+
+```bash
+# LiteLLM Proxy Configuration
+LITELLM_API_KEY=your-api-key
+LITELLM_API_BASE=http://localhost:4000  # LiteLLM proxy URL
+
+# Direct MiniMax
+MINIMAX_API_KEY=your-minimax-key
+MINIMAX_API_BASE=https://api.minimax.chat/v1
+```
