@@ -301,6 +301,7 @@
                 } else {
                     conversationId = result.conversation_id;
                     lastEventId = null;
+                    pollCount = 0; // Reset poll counter
                     
                     // Start polling for responses
                     startPolling();
@@ -385,8 +386,13 @@
             }
         }
 
+        let pollCount = 0;
+        
         async function pollForEvents() {
             if (!conversationId || executionFinished) return;
+            
+            pollCount++;
+            console.log(`Poll #${pollCount} at ${new Date().toISOString()}`);
             
             try {
                 const res = await fetch(`${API_BASE}/conversation/${conversationId}/events/search?limit=50`, {
@@ -400,6 +406,11 @@
                 
                 if (!res.ok) {
                     console.log('Poll failed with status:', res.status);
+                    // If we get 4xx errors repeatedly, something is wrong
+                    if (res.status >= 400 && res.status < 500) {
+                        addMessage(`\n⚠️ API Error (${res.status}). Check API key or conversation ID.`, 'bot');
+                        stopPolling();
+                    }
                     return;
                 }
                 
@@ -416,6 +427,11 @@
                 
                 if (events.length === 0) {
                     console.log('No events in response');
+                    // After 10 polls with no events, show warning
+                    if (pollCount > 10) {
+                        addMessage('\n⏳ Still waiting for agent response...', 'bot');
+                        pollCount = 0; // Reset counter
+                    }
                     return;
                 }
                 
