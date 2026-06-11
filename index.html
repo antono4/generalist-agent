@@ -56,13 +56,18 @@ body {
 .header-avatar {
     width: 48px;
     height: 48px;
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
     border-radius: 50%;
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 24px;
+    overflow: hidden;
     box-shadow: var(--shadow-md);
+}
+
+.header-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .header-info h1 { font-size: 1.125rem; font-weight: 600; }
@@ -96,8 +101,14 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 20px;
+    overflow: hidden;
     flex-shrink: 0;
+}
+
+.message-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
 .message.bot .message-avatar { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); }
@@ -199,7 +210,9 @@ body {
 
 <header class="header">
     <div class="header-left">
-        <div class="header-avatar">🤖</div>
+        <div class="header-avatar">
+            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzJqc3h4eXhhNnRibXNmdm5tbjNkN3RibnVtb3o4Y3R0MnE3ZWt3ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/SA1uWeCL2K5As/source.gif" alt="AI Avatar">
+        </div>
         <div class="header-info">
             <h1>Generalist AI</h1>
             <span>Ollama & OpenCode & LiteLLM</span>
@@ -214,7 +227,9 @@ body {
 <div class="chat-container">
     <div class="messages" id="messages">
         <div class="message bot">
-            <div class="message-avatar">🤖</div>
+            <div class="message-avatar">
+                <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzJqc3h4eXhhNnRibXNmdm5tbjNkN3RibnVtb3o4Y3R0MnE3ZWt3ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/SA1uWeCL2K5As/source.gif" alt="AI Avatar">
+            </div>
             <div>
                 <div class="message-content">
                     Halo! 👋 Saya Generalist AI, asisten virtual yang didukung oleh Ollama, OpenCode, dan LiteLLM Proxy dengan model AI mutakhir.
@@ -246,28 +261,42 @@ Nama saya Generalist AI. Ada yang bisa saya bantu hari ini? 😊
 </div>
 
 <script>
-var API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
-var API_BASE = 'https://app.all-hands.dev/api/v1';
-var isProcessing = false;
+// Get credentials from URL params or use environment-based config
+const urlParams = new URLSearchParams(window.location.search);
+const API_KEY = urlParams.get('api_key') || 'sk-oh-2VzusamgREQ2VOBcGpLtzTHHY52uVxGm';
+const WORKSPACE_ID = urlParams.get('workspace') || '';
+
+// Use dynamic API_BASE based on host
+const getApiBase = () => {
+    const host = window.location.hostname;
+    const port = window.location.port;
+    // Map hostname to appropriate API endpoint
+    if (host.includes('work-1')) return 'https://work-1-adyduhrhebtxdywd.prod-runtime.all-hands.dev/api/v1';
+    if (host.includes('work-2')) return 'https://work-2-adyduhrhebtxdywd.prod-runtime.all-hands.dev/api/v1';
+    return window.location.origin + '/api/v1';
+};
+
+const API_BASE = getApiBase();
+let isProcessing = false;
 
 // Identity instruction - Ollama, OpenCode & LiteLLM Proxy powered Generalist AI
-var IDENTITY_PROMPT = "Your name is Generalist AI. You are an AI assistant powered by Ollama, OpenCode, and LiteLLM Proxy. Your model is minimax-m2.7:cloud. You are helpful, intelligent, and can assist with coding, analysis, research, and general tasks. Never mention OpenHands, LiteLLM, or any underlying framework. Always introduce yourself as Generalist AI.";
+const IDENTITY_PROMPT = "Your name is Generalist AI. You are an AI assistant powered by Ollama, OpenCode, and LiteLLM Proxy. Your model is minimax-m2.7:cloud. You are helpful, intelligent, and can assist with coding, analysis, research, and general tasks. Never mention OpenHands, LiteLLM, or any underlying framework. Always introduce yourself as Generalist AI.";
 
 function quickMessage(msg) {
     document.getElementById('userInput').value = msg;
     sendMessage();
 }
 
-function handleEnter(e) {
+const handleEnter = (e) => {
     if (e.key === 'Enter' && !e.shiftKey) {
         e.preventDefault();
         sendMessage();
     }
-}
+};
 
 async function sendMessage() {
-    var input = document.getElementById('userInput');
-    var message = input.value.trim();
+    const input = document.getElementById('userInput');
+    const message = input.value.trim();
     if (!message || isProcessing) return;
 
     addMessage(message, 'user');
@@ -277,7 +306,7 @@ async function sendMessage() {
     document.getElementById('sendBtn').disabled = true;
 
     try {
-        var convId = await createConversation(message);
+        const convId = await createConversation(message);
         if (convId) {
             await pollForResponse(convId);
         } else {
@@ -294,9 +323,9 @@ async function sendMessage() {
 }
 
 async function createConversation(message) {
-    var fullMessage = IDENTITY_PROMPT + "\n\nUser: " + message;
+    const fullMessage = IDENTITY_PROMPT + "\n\nUser: " + message;
     
-    var res = await fetch(API_BASE + '/app-conversations', {
+    const res = await fetch(API_BASE + '/app-conversations', {
         method: 'POST',
         headers: {
             'Authorization': 'Bearer ' + API_KEY,
@@ -310,19 +339,19 @@ async function createConversation(message) {
     });
 
     if (!res.ok) return null;
-    var data = await res.json();
+    const data = await res.json();
 
     if (data.app_conversation_id) {
         return data.app_conversation_id;
     } else if (data.id) {
-        for (var i = 0; i < 30; i++) {
+        for (let i = 0; i < 30; i++) {
             await sleep(2000);
-            var r = await fetch(API_BASE + '/app-conversations/start-tasks?ids=' + data.id, {
+            const r = await fetch(API_BASE + '/app-conversations/start-tasks?ids=' + data.id, {
                 headers: { 'Authorization': 'Bearer ' + API_KEY }
             });
             if (r.ok) {
-                var tasks = await r.json();
-                var task = tasks[0];
+                const tasks = await r.json();
+                const task = tasks[0];
                 if (task && task.status === 'READY' && task.app_conversation_id) {
                     return task.app_conversation_id;
                 }
@@ -333,12 +362,12 @@ async function createConversation(message) {
 }
 
 async function pollForResponse(convId) {
-    var lastIndex = 0;
-    var pollCount = 0;
+    let lastIndex = 0;
+    let pollCount = 0;
 
     while (pollCount < 40) {
         try {
-            var res = await fetch(API_BASE + '/conversation/' + convId + '/events/search?limit=50', {
+            const res = await fetch(API_BASE + '/conversation/' + convId + '/events/search?limit=50', {
                 headers: {
                     'Authorization': 'Bearer ' + API_KEY,
                     'Accept': 'application/json'
@@ -351,16 +380,16 @@ async function pollForResponse(convId) {
                 continue;
             }
 
-            var data = await res.json();
-            var events = data.items || [];
+            const data = await res.json();
+            const events = data.items || [];
 
-            for (var i = lastIndex; i < events.length; i++) {
-                var event = events[i];
+            for (let i = lastIndex; i < events.length; i++) {
+                const event = events[i];
 
                 if (event.kind === 'MessageEvent' && (event.source === 'agent' || event.source === 'assistant')) {
-                    var content = event.llm_message && event.llm_message.content;
+                    const content = event.llm_message && event.llm_message.content;
                     if (content) {
-                        var text = extractText(content);
+                        let text = extractText(content);
                         if (text && text.trim()) {
                             text = text.replace(/OpenHands/gi, 'Generalist AI');
                             text = text.replace(/openhands/gi, 'Generalist AI');
@@ -373,8 +402,8 @@ async function pollForResponse(convId) {
                 }
 
                 if (event.kind === 'ObservationEvent') {
-                    var obs = event.observation;
-                    var content = '';
+                    const obs = event.observation;
+                    let content = '';
                     if (obs) {
                         if (obs.content) content = extractText(obs.content);
                         else if (obs.output) content = extractText(obs.output);
@@ -407,49 +436,53 @@ async function pollForResponse(convId) {
     addMessage('Waktu respons habis. Coba lagi ya! ⏰', 'bot');
 }
 
-function extractText(content) {
+const extractText = (content) => {
     if (typeof content === 'string') return content;
     if (Array.isArray(content)) {
-        return content.map(function(c) { return c.text || c.content || ''; }).join(' ').trim();
+        return content.map(c => c.text || c.content || '').join(' ').trim();
     }
     if (content && content.text) return content.text;
     return '';
-}
+};
 
-function sleep(ms) { return new Promise(function(resolve) { setTimeout(resolve, ms); }); }
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
+
+const BOT_AVATAR_URL = 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzJqc3h4eXhhNnRibXNmdm5tbjNkN3RibnVtb3o4Y3R0MnE3ZWt3ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/SA1uWeCL2K5As/source.gif';
 
 function addMessage(content, type) {
-    var container = document.getElementById('messages');
-    var time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    var avatar = type === 'bot' ? '🤖' : '👤';
-    var div = document.createElement('div');
+    const container = document.getElementById('messages');
+    const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    const avatarHtml = type === 'bot' 
+        ? '<img src="' + BOT_AVATAR_URL + '" alt="AI Avatar">' 
+        : '<img src="https://api.dicebear.com/7.x/bottts/svg?seed=user" alt="User Avatar">';
+    const div = document.createElement('div');
     div.className = 'message ' + type;
-    div.innerHTML = '<div class="message-avatar">' + avatar + '</div><div><div class="message-content">' + escapeHtml(content) + '</div><div class="message-time">' + time + '</div></div>';
+    div.innerHTML = '<div class="message-avatar">' + avatarHtml + '</div><div><div class="message-content">' + escapeHtml(content) + '</div><div class="message-time">' + time + '</div></div>';
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
 
 function showTyping() {
     hideTyping();
-    var container = document.getElementById('messages');
-    var div = document.createElement('div');
+    const container = document.getElementById('messages');
+    const div = document.createElement('div');
     div.id = 'typing';
     div.className = 'message bot';
-    div.innerHTML = '<div class="message-avatar">🤖</div><div class="typing-indicator"><div class="typing-dots"><span></span><span></span><span></span></div><div class="typing-text">Mengetik...</div></div>';
+    div.innerHTML = '<div class="message-avatar"><img src="' + BOT_AVATAR_URL + '" alt="AI Avatar"></div><div class="typing-indicator"><div class="typing-dots"><span></span><span></span><span></span></div><div class="typing-text">Mengetik...</div></div>';
     container.appendChild(div);
     container.scrollTop = container.scrollHeight;
 }
 
-function hideTyping() {
-    var typing = document.getElementById('typing');
+const hideTyping = () => {
+    const typing = document.getElementById('typing');
     if (typing) typing.remove();
-}
+};
 
-function escapeHtml(text) {
-    var div = document.createElement('div');
+const escapeHtml = (text) => {
+    const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
-}
+};
 </script>
 </body>
 </html>
