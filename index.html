@@ -403,10 +403,15 @@
                 
                 if (events.length === 0) return;
                 
-                // Find new events
+                // Debug: log event count
+                console.log(`Events received: ${events.length}, lastEventId: ${lastEventId}`);
+                
+                // Find new events - skip already processed ones
                 const newEvents = lastEventId 
-                    ? events.filter(e => e.id !== lastEventId && new Date(e.timestamp) > new Date(lastEventId))
+                    ? events.filter(e => e.id !== lastEventId)
                     : events;
+                
+                console.log(`New events to process: ${newEvents.length}`);
                 
                 // Process events
                 for (const event of newEvents) {
