@@ -393,15 +393,31 @@
                     headers: { 
                         'Authorization': `Bearer ${API_KEY}`,
                         'Accept': 'application/json'
-                    }
+                    },
+                    mode: 'cors',
+                    credentials: 'omit'
                 });
                 
-                if (!res.ok) return;
+                if (!res.ok) {
+                    console.log('Poll failed with status:', res.status);
+                    return;
+                }
                 
-                const data = await res.json();
+                const text = await res.text();
+                let data;
+                try {
+                    data = JSON.parse(text);
+                } catch (e) {
+                    console.log('Failed to parse JSON:', text.substring(0, 200));
+                    return;
+                }
+                
                 const events = data.items || [];
                 
-                if (events.length === 0) return;
+                if (events.length === 0) {
+                    console.log('No events in response');
+                    return;
+                }
                 
                 // Debug: log event count
                 console.log(`Events received: ${events.length}, lastEventId: ${lastEventId}`);
