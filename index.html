@@ -100,16 +100,176 @@ body::before{content:'';position:fixed;top:0;left:0;right:0;bottom:0;background:
 var API_KEY='sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
 var API_BASE='https://app.all-hands.dev/api/v1';
 var isProcessing=false;
-async function sendMessage(){var input=document.getElementById('userInput');var message=input.value.trim();if(!message||isProcessing)return;addMessage(message,'user');input.value='';showTyping();isProcessing=true;document.getElementById('sendBtn').disabled=true;try{var convId=await createConversation(message);if(convId){await pollForResponse(convId);}else{hideTyping();addMessage('connection error: failed to establish link','bot');}}catch(e){hideTyping();addMessage('system error: '+e.message,'bot');}isProcessing=false;document.getElementById('sendBtn').disabled=false;}
-async function createConversation(message){var res=await fetch(API_BASE+'/app-conversations',{method:'POST',headers:{'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json'},body:JSON.stringify({initial_message:{content:[{type:"text",text:message}]}})});if(!res.ok)return null;var data=await res.json();if(data.app_conversation_id){return data.app_conversation_id;}else if(data.id){for(var i=0;i<30;i++){await sleep(2000);var r=await fetch(API_BASE+'/app-conversations/start-tasks?ids='+data.id,{headers:{'Authorization':'Bearer '+API_KEY}});if(r.ok){var tasks=await r.json();var task=tasks[0];if(task&&task.status==='READY'&&task.app_conversation_id){return task.app_conversation_id;}}}}return null;}
-async function pollForResponse(convId){var lastIndex=0;while(true){try{var res=await fetch(API_BASE+'/conversation/'+convId+'/events/search?limit=50',{headers:{'Authorization':'Bearer '+API_KEY,'Accept':'application/json'}});if(!res.ok){await sleep(2000);continue;}var data=await res.json();var events=data.items||[];for(var i=lastIndex;i<events.length;i++){var event=events[i];if(event.kind==='MessageEvent'&&(event.source==='assistant'||event.source==='agent')){var content=event.llm_message&&event.llm_message.content;if(content){var text=extractText(content);if(text&&text.trim()){await sleep(2500+Math.random()*1500);hideTyping();addMessage(text,'bot');}}}if(event.kind==='ObservationEvent'){var obs=event.observation;var content=obs&&obs.content?extractText(obs.content):'';if(!content&&obs&&obs.output)content=extractText(obs.output);if(content&&content.trim()){await sleep(2500+Math.random()*1500);hideTyping();addMessage(content,'bot');}}if(event.kind==='ConversationStateUpdateEvent'&&event.key==='execution_status'&&event.value==='finished'){return;}}lastIndex=events.length;}catch(e){console.log('Poll error:',e);}await sleep(2500);}}
-function extractText(content){if(typeof content==='string')return content;if(Array.isArray(content)){return content.map(function(c){return c.text||'';}).join('
-').trim();}return'';}
+
+function handleEnter(e){if(e.key==='Enter'&&!e.shiftKey){e.preventDefault();sendMessage();}}
+
+async function sendMessage(){
+    var input=document.getElementById('userInput');
+    var message=input.value.trim();
+    if(!message||isProcessing)return;
+    
+    addMessage(message,'user');
+    input.value='';
+    showTyping();
+    isProcessing=true;
+    document.getElementById('sendBtn').disabled=true;
+    document.getElementById('userInput').disabled=true;
+
+    try{
+        var convId=await createConversation(message);
+        if(convId){
+            await pollForResponse(convId);
+        }else{
+            hideTyping();
+            addMessage('connection error: failed to establish link','bot');
+        }
+    }catch(e){
+        hideTyping();
+        addMessage('system error: '+e.message,'bot');
+    }
+    
+    isProcessing=false;
+    document.getElementById('sendBtn').disabled=false;
+    document.getElementById('userInput').disabled=false;
+    document.getElementById('userInput').focus();
+}
+
+async function createConversation(message){
+    var res=await fetch(API_BASE+'/app-conversations',{
+        method:'POST',
+        headers:{'Authorization':'Bearer '+API_KEY,'Content-Type':'application/json'},
+        body:JSON.stringify({initial_message:{content:[{type:"text",text:message}]}})
+    });
+    if(!res.ok)return null;
+    var data=await res.json();
+    if(data.app_conversation_id){return data.app_conversation_id;}
+    else if(data.id){
+        for(var i=0;i<30;i++){
+            await sleep(2000);
+            var r=await fetch(API_BASE+'/app-conversations/start-tasks?ids='+data.id,{
+                headers:{'Authorization':'Bearer '+API_KEY}
+            });
+            if(r.ok){
+                var tasks=await r.json();
+                var task=tasks[0];
+                if(task&&task.status==='READY'&&task.app_conversation_id){return task.app_conversation_id;}
+            }
+        }
+    }
+    return null;
+}
+
+async function pollForResponse(convId){
+    var lastIndex=0;
+    var maxPolls=40;
+    var pollCount=0;
+    
+    while(pollCount<maxPolls){
+        try{
+            var res=await fetch(API_BASE+'/conversation/'+convId+'/events/search?limit=50',{
+                headers:{'Authorization':'Bearer '+API_KEY,'Accept':'application/json'}
+            });
+            
+            if(!res.ok){
+                await sleep(2000);
+                pollCount++;
+                continue;
+            }
+            
+            var data=await res.json();
+            var events=data.items||[];
+            
+            for(var i=lastIndex;i<events.length;i++){
+                var event=events[i];
+                
+                // Handle MessageEvent from agent/assistant
+                if(event.kind==='MessageEvent'&&(event.source==='assistant'||event.source==='agent')){
+                    var content=event.llm_message&&event.llm_message.content;
+                    if(content){
+                        var text=extractText(content);
+                        if(text&&text.trim()){
+                            hideTyping();
+                            addMessage(text,'bot');
+                        }
+                    }
+                }
+                
+                // Handle ObservationEvent
+                if(event.kind==='ObservationEvent'){
+                    var obs=event.observation;
+                    var content='';
+                    if(obs){
+                        if(obs.content){
+                            content=extractText(obs.content);
+                        }else if(obs.output){
+                            content=extractText(obs.output);
+                        }
+                    }
+                    if(content&&content.trim()){
+                        hideTyping();
+                        addMessage(content,'bot');
+                    }
+                }
+                
+                // Check for finished
+                if(event.kind==='ConversationStateUpdateEvent'&&event.key==='execution_status'&&event.value==='finished'){
+                    return;
+                }
+            }
+            
+            lastIndex=events.length;
+            
+        }catch(e){
+            console.log('Poll error:',e);
+        }
+        
+        pollCount++;
+        await sleep(2000);
+    }
+}
+
+function extractText(content){
+    if(typeof content==='string')return content;
+    if(Array.isArray(content)){
+        return content.map(function(c){return c.text||c.content||'';}).join(' ').trim();
+    }
+    if(content&&content.text)return content.text;
+    return'';
+}
+
 function sleep(ms){return new Promise(function(resolve){setTimeout(resolve,ms);});}
-function addMessage(content,type){var container=document.getElementById('chatArea');var time=new Date().toLocaleTimeString('en-US',{hour12:false});var div=document.createElement('div');div.className='msg '+type;div.innerHTML='<div class="mh"><div class="mi">'+(type==='bot'?'&#x1F916;':'&#x1F464;')+'</div><div class="ms">'+(type==='bot'?'Generalist-X7':'User')+'</div><div class="mt">'+time+'</div></div><div class="mk">'+escapeHtml(content)+'</div>';container.appendChild(div);container.scrollTop=container.scrollHeight;}
-function showTyping(){hideTyping();var container=document.getElementById('chatArea');var div=document.createElement('div');div.id='typing';div.className='tp';div.innerHTML='<div class="pv"><div class="pb"></div><div class="pb"></div><div class="pb"></div><div class="pb"></div><div class="pb"></div></div><div class="pt">Processing</div>';container.appendChild(div);container.scrollTop=container.scrollHeight;}
-function hideTyping(){var typing=document.getElementById('typing');if(typing)typing.remove();}
-function escapeHtml(text){var div=document.createElement('div');div.textContent=text;return div.innerHTML;}
+
+function addMessage(content,type){
+    var container=document.getElementById('chatArea');
+    var time=new Date().toLocaleTimeString('en-US',{hour12:false});
+    var div=document.createElement('div');
+    div.className='msg '+type;
+    div.innerHTML='<div class="mh"><div class="mi">'+(type==='bot'?'&#x1F916;':'&#x1F464;')+'</div><div class="ms">'+(type==='bot'?'Generalist-X7':'User')+'</div><div class="mt">'+time+'</div></div><div class="mk">'+escapeHtml(content)+'</div>';
+    container.appendChild(div);
+    container.scrollTop=container.scrollHeight;
+}
+
+function showTyping(){
+    hideTyping();
+    var container=document.getElementById('chatArea');
+    var div=document.createElement('div');
+    div.id='typing';
+    div.className='tp';
+    div.innerHTML='<div class="pv"><div class="pb"></div><div class="pb"></div><div class="pb"></div><div class="pb"></div><div class="pb"></div></div><div class="pt">Processing</div>';
+    container.appendChild(div);
+    container.scrollTop=container.scrollHeight;
+}
+
+function hideTyping(){
+    var typing=document.getElementById('typing');
+    if(typing)typing.remove();
+}
+
+function escapeHtml(text){
+    var div=document.createElement('div');
+    div.textContent=text;
+    return div.innerHTML;
+}
 </script>
 </body>
 </html>
