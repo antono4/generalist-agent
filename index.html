@@ -266,8 +266,21 @@ const urlParams = new URLSearchParams(window.location.search);
 const API_KEY = urlParams.get('api_key') || 'sk-oh-2VzusamgREQ2VOBcGpLtzTHHY52uVxGm';
 const WORKSPACE_ID = urlParams.get('workspace') || '';
 
-// Fixed API_BASE pointing to OpenHands Cloud
-const API_BASE = 'https://app.all-hands.dev/api/v1';
+// Use work host API if available, otherwise use app.all-hands.dev
+const getApiBase = () => {
+    const host = window.location.hostname;
+    // Map specific work hosts to their API endpoints
+    if (host.includes('work-1') || host === 'work-1-adyduhrhebtxdywd.prod-runtime.all-hands.dev') {
+        return 'https://work-1-adyduhrhebtxdywd.prod-runtime.all-hands.dev/api/v1';
+    }
+    if (host.includes('work-2') || host === 'work-2-adyduhrhebtxdywd.prod-runtime.all-hands.dev') {
+        return 'https://work-2-adyduhrhebtxdywd.prod-runtime.all-hands.dev/api/v1';
+    }
+    // Default to app.all-hands.dev
+    return 'https://app.all-hands.dev/api/v1';
+};
+
+const API_BASE = getApiBase();
 let isProcessing = false;
 
 // Identity instruction - Ollama, OpenCode & LiteLLM Proxy powered Generalist AI
