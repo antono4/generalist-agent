@@ -271,29 +271,20 @@
     <script>
         // OpenHands API Configuration
         // Get your API key from: https://app.all-hands.dev/settings/api-keys
-        const API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244'; // OpenHands API Key
+        const API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
         const API_BASE = 'https://app.all-hands.dev/api/v1';
         
         let conversationId = null;
-        let startTaskId = null;
         let isProcessing = false;
-        let pollInterval = null;
 
         async function sendMessage() {
             const input = document.getElementById('userInput');
             const message = input.value.trim();
             
             if (!message || isProcessing) return;
-            if (API_KEY === 'YOUR_OPENHANDS_API_KEY') {
-                addMessage('⚠️ Please set your OpenHands API key in the HTML file.\n\nGet your API key from: https://app.all-hands.dev/settings/api-keys', 'bot');
-                return;
-            }
             
-            // Add user message to chat
             addMessage(message, 'user');
             input.value = '';
-            
-            // Show typing indicator
             showTyping();
             isProcessing = true;
             document.getElementById('sendBtn').disabled = true;
@@ -304,12 +295,17 @@
                 
                 if (response.error) {
                     addMessage(`Error: ${response.error}`, 'bot');
+                } else if (response.conversation_url) {
+                    // Success - provide the conversation URL for viewing
+                    addMessage(`✅ Conversation started successfully!\n\nView the conversation at:\n${response.conversation_url}\n\nNote: This web interface shows the initiation. For full chat experience, use the OpenHands web app.`, 'bot');
+                } else if (response.message) {
+                    addMessage(response.message, 'bot');
                 } else {
-                    addMessage(response.message || response.reply || JSON.stringify(response, null, 2), 'bot');
+                    addMessage('Conversation created. Check the OpenHands app for the full interaction.', 'bot');
                 }
             } catch (error) {
                 hideTyping();
-                addMessage(`Connection error. Make sure OpenHands API is configured correctly.\n\nDetails: ${error.message}`, 'bot');
+                addMessage(`Connection error: ${error.message}`, 'bot');
             }
             
             isProcessing = false;
@@ -317,154 +313,67 @@
         }
 
         async function callOpenHandsAPI(message) {
-            // Step 1: Create new conversation if needed
-            if (!conversationId) {
-                const createRes = await fetch(`${API_BASE}/app-conversations`, {
-                    method: 'POST',
-                    headers: {
-                        'Authorization': `Bearer ${API_KEY}`,
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({
-                        initial_message: {
-                            content: [{ type: "text", text: message }]
-                        }
-                    })
-                });
-                
-                if (!createRes.ok) {
-                    const err = await createRes.text();
-                    return { error: `Failed to create conversation: ${err}` };
-                }
-                
-                const createData = await createRes.json();
-                
-                // Check if we got app_conversation_id directly or need to poll
-                if (createData.app_conversation_id) {
-                    conversationId = createData.app_conversation_id;
-                } else if (createData.id) {
-                    // Async start - need to poll
-                    startTaskId = createData.id;
-                    const readyData = await pollStartTask(startTaskId);
-                    if (readyData.error) return readyData;
-                    conversationId = readyData.app_conversation_id;
-                } else {
-                    return { error: 'Invalid response from API' };
-                }
-                
-                // Get initial response from events
-                return await pollForResponse();
+            // Create conversation
+            const createRes = await fetch(`${API_BASE}/app-conversations`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${API_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    initial_message: {
+                        content: [{ type: "text", text: message }]
+                    }
+                })
+            });
+            
+            if (!createRes.ok) {
+                const err = await createRes.text();
+                return { error: `Failed: ${err}` };
             }
             
-            // Step 2: Send message to existing conversation
-            // For existing conversations, we need to add user message and poll
-            return await sendMessageToConversation(message);
-        }
-
-        async function sendMessageToConversation(message) {
-            // OpenHands Cloud uses events-based polling
-            // We need to poll the conversation events to get responses
-            return await pollForResponse(message);
+            const createData = await createRes.json();
+            
+            // Handle both sync and async responses
+            if (createData.app_conversation_id) {
+                conversationId = createData.app_conversation_id;
+            } else if (createData.id) {
+                // Async - poll for ready status
+                const ready = await pollStartTask(createData.id);
+                if (ready.error) return ready;
+                conversationId = ready.app_conversation_id;
+            } else {
+                return { error: 'Invalid API response' };
+            }
+            
+            return { 
+                success: true, 
+                conversation_id: conversationId,
+                conversation_url: `https://app.all-hands.dev/conversations/${conversationId}`
+            };
         }
 
         async function pollStartTask(taskId) {
             const maxAttempts = 30;
-            let attempts = 0;
             
-            while (attempts < maxAttempts) {
+            for (let i = 0; i < maxAttempts; i++) {
                 await sleep(2000);
                 
                 const res = await fetch(`${API_BASE}/app-conversations/start-tasks?ids=${taskId}`, {
                     headers: { 'Authorization': `Bearer ${API_KEY}` }
                 });
                 
-                if (!res.ok) {
-                    return { error: `Poll failed: ${res.status}` };
-                }
+                if (!res.ok) continue;
                 
                 const data = await res.json();
-                const task = data.items ? data.items[0] : data;
+                const task = data.items ? data[0] : data;
                 
-                if (task && task.status === 'READY' && task.app_conversation_id) {
+                if (task?.status === 'READY' && task.app_conversation_id) {
                     return { app_conversation_id: task.app_conversation_id };
                 }
-                
-                attempts++;
             }
             
-            return { error: 'Timeout waiting for conversation to start' };
-        }
-
-        async function pollForResponse() {
-            const maxAttempts = 60;
-            let attempts = 0;
-            
-            while (attempts < maxAttempts) {
-                await sleep(3000);
-                
-                try {
-                    const res = await fetch(`${API_BASE}/conversation/${conversationId}/events/search?limit=50`, {
-                        headers: { 
-                            'Authorization': `Bearer ${API_KEY}`,
-                            'Accept': 'application/json'
-                        }
-                    });
-                    
-                    if (!res.ok) {
-                        console.log('Waiting for conversation...');
-                        attempts++;
-                        continue;
-                    }
-                    
-                    const data = await res.json();
-                    const events = data.items || [];
-                    
-                    // Look for MessageEvent from assistant
-                    const assistantMessages = events.filter(e => 
-                        e.kind === 'MessageEvent' && 
-                        e.source === 'assistant'
-                    );
-                    
-                    if (assistantMessages.length > 0) {
-                        const lastMsg = assistantMessages[assistantMessages.length - 1];
-                        const content = lastMsg.message?.content || lastMsg.content;
-                        if (content) {
-                            return { message: extractTextFromContent(content) };
-                        }
-                    }
-                    
-                    // Check for agent action completion
-                    const actionEvents = events.filter(e => e.kind === 'ActionEvent');
-                    const obsEvents = events.filter(e => e.kind === 'ObservationEvent');
-                    
-                    if (actionEvents.length > 0 && obsEvents.length > 0) {
-                        // Agent has done something - find the last observation
-                        const lastObs = obsEvents[obsEvents.length - 1];
-                        if (lastObs.observation) {
-                            const output = lastObs.observation.output || lastObs.observation.content;
-                            if (output) {
-                                return { message: output };
-                            }
-                        }
-                    }
-                    
-                } catch (error) {
-                    console.log('Polling error:', error);
-                }
-                
-                attempts++;
-            }
-            
-            return { error: 'Timeout waiting for response' };
-        }
-
-        function extractTextFromContent(content) {
-            if (typeof content === 'string') return content;
-            if (Array.isArray(content)) {
-                return content.map(c => c.text || c.content || '').join('\n');
-            }
-            if (content && content.text) return content.text;
-            return JSON.stringify(content);
+            return { error: 'Timeout waiting for sandbox to start (may still be running)' };
         }
 
         function sleep(ms) {
@@ -525,7 +434,6 @@
         }
 
         function formatContent(content) {
-            // Basic markdown-like formatting
             let formatted = escapeHtml(content);
             formatted = formatted.replace(/\n/g, '<br>');
             formatted = formatted.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
