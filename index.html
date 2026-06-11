@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Generalist AI - Professional Assistant</title>
+<title>Generalist AI - Powered by Ollama</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
@@ -69,14 +69,7 @@ body {
 .header-info h1 { font-size: 1.125rem; font-weight: 600; }
 .header-info span { font-size: 0.75rem; color: var(--text-secondary); }
 
-.header-status {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    padding: 8px 16px;
-    background: var(--bg-secondary);
-    border-radius: 20px;
-}
+.header-status { display: flex; align-items: center; gap: 8px; padding: 8px 16px; background: var(--bg-secondary); border-radius: 20px; }
 
 .status-dot {
     width: 8px;
@@ -89,36 +82,12 @@ body {
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 .status-text { font-size: 0.75rem; font-weight: 500; color: var(--accent-success); }
 
-.chat-container {
-    flex: 1;
-    max-width: 900px;
-    width: 100%;
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    padding: 24px;
-}
+.chat-container { flex: 1; max-width: 900px; width: 100%; margin: 0 auto; display: flex; flex-direction: column; padding: 24px; }
 
-.messages {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
-    overflow-y: auto;
-    padding-bottom: 20px;
-}
+.messages { flex: 1; display: flex; flex-direction: column; gap: 20px; overflow-y: auto; padding-bottom: 20px; }
 
-.message {
-    display: flex;
-    gap: 12px;
-    animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
+.message { display: flex; gap: 12px; animation: fadeIn 0.3s ease; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
 .message.user { flex-direction: row-reverse; }
 
 .message-avatar {
@@ -135,14 +104,7 @@ body {
 .message.bot .message-avatar { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); }
 .message.user .message-avatar { background: var(--bg-tertiary); }
 
-.message-content {
-    max-width: 70%;
-    padding: 16px 20px;
-    border-radius: var(--radius-md);
-    line-height: 1.6;
-    font-size: 0.9375rem;
-}
-
+.message-content { max-width: 70%; padding: 16px 20px; border-radius: var(--radius-md); line-height: 1.6; font-size: 0.9375rem; }
 .message.bot .message-content { background: var(--bg-bot); border: 1px solid rgba(79, 70, 229, 0.1); border-top-left-radius: 4px; }
 .message.user .message-content { background: var(--accent-primary); color: white; border-top-right-radius: 4px; }
 
@@ -170,28 +132,11 @@ body {
 }
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
-
-@keyframes bounce {
-    0%, 60%, 100% { transform: translateY(0); }
-    30% { transform: translateY(-8px); }
-}
-
+@keyframes bounce { 0%, 60%, 100% { transform: translateY(0); } 30% { transform: translateY(-8px); } }
 .typing-text { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
 
-.input-area {
-    background: var(--bg-primary);
-    border-top: 1px solid var(--border-color);
-    padding: 20px 24px;
-    margin-top: auto;
-}
-
-.input-container {
-    max-width: 900px;
-    margin: 0 auto;
-    display: flex;
-    gap: 12px;
-    align-items: flex-end;
-}
+.input-area { background: var(--bg-primary); border-top: 1px solid var(--border-color); padding: 20px 24px; margin-top: auto; }
+.input-container { max-width: 900px; margin: 0 auto; display: flex; gap: 12px; align-items: flex-end; }
 
 .input-wrapper {
     flex: 1;
@@ -204,22 +149,8 @@ body {
     transition: all 0.2s;
 }
 
-.input-wrapper:focus-within {
-    border-color: var(--accent-primary);
-    background: var(--bg-primary);
-    box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1);
-}
-
-.input-wrapper input {
-    flex: 1;
-    background: transparent;
-    border: none;
-    padding: 14px 18px;
-    font-size: 0.9375rem;
-    color: var(--text-primary);
-    outline: none;
-}
-
+.input-wrapper:focus-within { border-color: var(--accent-primary); background: var(--bg-primary); box-shadow: 0 0 0 4px rgba(79, 70, 229, 0.1); }
+.input-wrapper input { flex: 1; background: transparent; border: none; padding: 14px 18px; font-size: 0.9375rem; color: var(--text-primary); outline: none; }
 .input-wrapper input::placeholder { color: var(--text-muted); }
 
 .send-btn {
@@ -241,7 +172,6 @@ body {
 .send-btn svg { width: 22px; height: 22px; fill: white; }
 
 .quick-actions { display: flex; gap: 8px; padding: 12px 0; flex-wrap: wrap; }
-
 .quick-btn {
     padding: 8px 16px;
     background: var(--bg-tertiary);
@@ -252,7 +182,6 @@ body {
     cursor: pointer;
     transition: all 0.2s;
 }
-
 .quick-btn:hover { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
 
 .messages::-webkit-scrollbar { width: 6px; }
@@ -274,7 +203,7 @@ body {
         <div class="header-avatar">🤖</div>
         <div class="header-info">
             <h1>Generalist AI</h1>
-            <span>Your AI Assistant</span>
+            <span>Powered by Ollama</span>
         </div>
     </div>
     <div class="header-status">
@@ -289,9 +218,9 @@ body {
             <div class="message-avatar">🤖</div>
             <div>
                 <div class="message-content">
-                    Halo! 👋 Saya Generalist AI, asisten virtual yang siap membantu Anda. 
+                    Halo! 👋 Saya Generalist AI, asisten virtual yang didukung oleh Ollama dengan model AI canggih.
 
-Ada yang bisa saya bantu hari ini? 😊
+Nama saya Generalist AI. Ada yang bisa saya bantu hari ini? 😊
                 </div>
                 <div class="message-time">Just now</div>
             </div>
@@ -322,8 +251,8 @@ var API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
 var API_BASE = 'https://app.all-hands.dev/api/v1';
 var isProcessing = false;
 
-// Identity instruction for the AI
-var IDENTITY_PROMPT = "Your name is Generalist AI. You are a helpful AI assistant. Never mention OpenHands or any underlying framework. Answer as Generalist AI.";
+// Identity instruction - Ollama powered Generalist AI
+var IDENTITY_PROMPT = "Your name is Generalist AI. You are an AI assistant powered by Ollama. Your model is minimax-m2.7:cloud. You are helpful, intelligent, and can assist with coding, analysis, research, and general tasks. Never mention OpenHands, LiteLLM, or any underlying framework. Always introduce yourself as Generalist AI.";
 
 function quickMessage(msg) {
     document.getElementById('userInput').value = msg;
@@ -366,8 +295,7 @@ async function sendMessage() {
 }
 
 async function createConversation(message) {
-    // Clear and simple identity instruction
-    var fullMessage = IDENTITY_PROMPT + "\n\nUser question: " + message;
+    var fullMessage = IDENTITY_PROMPT + "\n\nUser: " + message;
     
     var res = await fetch(API_BASE + '/app-conversations', {
         method: 'POST',
@@ -435,10 +363,10 @@ async function pollForResponse(convId) {
                     if (content) {
                         var text = extractText(content);
                         if (text && text.trim()) {
-                            // Clean up any mentions of OpenHands
                             text = text.replace(/OpenHands/gi, 'Generalist AI');
                             text = text.replace(/openhands/gi, 'Generalist AI');
-                            text = text.replace(/\[SYSTEM[\s\S]*?\]/gi, ''); // Remove any system brackets
+                            text = text.replace(/\[SYSTEM[\s\S]*?\]/gi, '');
+                            text = text.replace(/This skill[\s\S]*?interface/gi, '');
                             hideTyping();
                             addMessage(text, 'bot');
                         }
