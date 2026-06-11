@@ -258,8 +258,8 @@
                     for (let i = lastIndex; i < events.length; i++) {
                         const event = events[i];
                         
-                        // Get assistant messages
-                        if (event.kind === 'MessageEvent' && event.source === 'assistant') {
+                        // Get assistant messages (source can be 'agent' or 'assistant')
+                        if (event.kind === 'MessageEvent' && (event.source === 'assistant' || event.source === 'agent')) {
                             const content = event.llm_message?.content;
                             if (content) {
                                 const text = extractText(content);
