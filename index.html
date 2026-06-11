@@ -436,12 +436,19 @@
                         }
                     }
                     
-                    // Get tool outputs from observations
+                    // Get tool outputs from observations (including finish tool)
                     if (event.kind === 'ObservationEvent' && event.source === 'environment') {
                         const obs = event.observation;
-                        if (obs?.output) {
+                        // Handle different observation formats
+                        let content = '';
+                        if (obs?.content) {
+                            content = extractText(obs.content);
+                        } else if (obs?.output) {
+                            content = typeof obs.output === 'string' ? obs.output : extractText(obs.output);
+                        }
+                        if (content && content.trim()) {
                             hideTyping();
-                            addMessage(obs.output, 'bot');
+                            addMessage(content, 'bot');
                         }
                     }
                 }
