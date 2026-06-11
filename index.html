@@ -424,13 +424,15 @@
                         }
                     }
                     
-                    // Get assistant messages
+                    // Get assistant messages - check llm_message for the actual content
                     if (event.kind === 'MessageEvent' && event.source === 'assistant') {
-                        const content = event.message?.content;
+                        // Try llm_message first (actual assistant response)
+                        const llmMsg = event.llm_message;
+                        const content = llmMsg?.content || event.message?.content;
                         if (content) {
                             hideTyping();
                             const text = extractText(content);
-                            if (text) {
+                            if (text && text.trim()) {
                                 addMessage(text, 'bot');
                             }
                         }
