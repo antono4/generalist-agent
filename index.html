@@ -39,7 +39,6 @@ body {
     flex-direction: column;
 }
 
-/* Header */
 .header {
     background: var(--bg-primary);
     border-bottom: 1px solid var(--border-color);
@@ -53,11 +52,7 @@ body {
     z-index: 100;
 }
 
-.header-left {
-    display: flex;
-    align-items: center;
-    gap: 14px;
-}
+.header-left { display: flex; align-items: center; gap: 14px; }
 
 .header-avatar {
     width: 48px;
@@ -71,16 +66,8 @@ body {
     box-shadow: var(--shadow-md);
 }
 
-.header-info h1 {
-    font-size: 1.125rem;
-    font-weight: 600;
-    color: var(--text-primary);
-}
-
-.header-info span {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-}
+.header-info h1 { font-size: 1.125rem; font-weight: 600; }
+.header-info span { font-size: 0.75rem; color: var(--text-secondary); }
 
 .header-status {
     display: flex;
@@ -99,18 +86,9 @@ body {
     animation: pulse 2s infinite;
 }
 
-@keyframes pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.5; }
-}
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+.status-text { font-size: 0.75rem; font-weight: 500; color: var(--accent-success); }
 
-.status-text {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--accent-success);
-}
-
-/* Chat Container */
 .chat-container {
     flex: 1;
     max-width: 900px;
@@ -121,7 +99,6 @@ body {
     padding: 24px;
 }
 
-/* Messages */
 .messages {
     flex: 1;
     display: flex;
@@ -142,9 +119,7 @@ body {
     to { opacity: 1; transform: translateY(0); }
 }
 
-.message.user {
-    flex-direction: row-reverse;
-}
+.message.user { flex-direction: row-reverse; }
 
 .message-avatar {
     width: 40px;
@@ -157,13 +132,8 @@ body {
     flex-shrink: 0;
 }
 
-.message.bot .message-avatar {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-}
-
-.message.user .message-avatar {
-    background: var(--bg-tertiary);
-}
+.message.bot .message-avatar { background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary)); }
+.message.user .message-avatar { background: var(--bg-tertiary); }
 
 .message-content {
     max-width: 70%;
@@ -173,30 +143,12 @@ body {
     font-size: 0.9375rem;
 }
 
-.message.bot .message-content {
-    background: var(--bg-bot);
-    border: 1px solid rgba(79, 70, 229, 0.1);
-    border-top-left-radius: 4px;
-}
+.message.bot .message-content { background: var(--bg-bot); border: 1px solid rgba(79, 70, 229, 0.1); border-top-left-radius: 4px; }
+.message.user .message-content { background: var(--accent-primary); color: white; border-top-right-radius: 4px; }
 
-.message.user .message-content {
-    background: var(--accent-primary);
-    color: white;
-    border-top-right-radius: 4px;
-}
+.message-time { font-size: 0.65rem; color: var(--text-muted); margin-top: 6px; padding: 0 4px; }
+.message.user .message-time { text-align: right; }
 
-.message-time {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    margin-top: 6px;
-    padding: 0 4px;
-}
-
-.message.user .message-time {
-    text-align: right;
-}
-
-/* Typing Indicator */
 .typing-indicator {
     display: flex;
     align-items: center;
@@ -208,11 +160,7 @@ body {
     max-width: 140px;
 }
 
-.typing-dots {
-    display: flex;
-    gap: 4px;
-}
-
+.typing-dots { display: flex; gap: 4px; }
 .typing-dots span {
     width: 8px;
     height: 8px;
@@ -220,7 +168,6 @@ body {
     border-radius: 50%;
     animation: bounce 1.4s infinite;
 }
-
 .typing-dots span:nth-child(2) { animation-delay: 0.2s; }
 .typing-dots span:nth-child(3) { animation-delay: 0.4s; }
 
@@ -229,13 +176,8 @@ body {
     30% { transform: translateY(-8px); }
 }
 
-.typing-text {
-    font-size: 0.75rem;
-    color: var(--text-secondary);
-    font-weight: 500;
-}
+.typing-text { font-size: 0.75rem; color: var(--text-secondary); font-weight: 500; }
 
-/* Input Area */
 .input-area {
     background: var(--bg-primary);
     border-top: 1px solid var(--border-color);
@@ -278,9 +220,7 @@ body {
     outline: none;
 }
 
-.input-wrapper input::placeholder {
-    color: var(--text-muted);
-}
+.input-wrapper input::placeholder { color: var(--text-muted); }
 
 .send-btn {
     width: 52px;
@@ -296,29 +236,11 @@ body {
     box-shadow: var(--shadow-md);
 }
 
-.send-btn:hover:not(:disabled) {
-    background: var(--accent-secondary);
-    transform: scale(1.05);
-}
+.send-btn:hover:not(:disabled) { background: var(--accent-secondary); transform: scale(1.05); }
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+.send-btn svg { width: 22px; height: 22px; fill: white; }
 
-.send-btn:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-}
-
-.send-btn svg {
-    width: 22px;
-    height: 22px;
-    fill: white;
-}
-
-/* Quick Actions */
-.quick-actions {
-    display: flex;
-    gap: 8px;
-    padding: 12px 0;
-    flex-wrap: wrap;
-}
+.quick-actions { display: flex; gap: 8px; padding: 12px 0; flex-wrap: wrap; }
 
 .quick-btn {
     padding: 8px 16px;
@@ -331,27 +253,12 @@ body {
     transition: all 0.2s;
 }
 
-.quick-btn:hover {
-    background: var(--accent-primary);
-    color: white;
-    border-color: var(--accent-primary);
-}
+.quick-btn:hover { background: var(--accent-primary); color: white; border-color: var(--accent-primary); }
 
-/* Scrollbar */
-.messages::-webkit-scrollbar {
-    width: 6px;
-}
+.messages::-webkit-scrollbar { width: 6px; }
+.messages::-webkit-scrollbar-track { background: transparent; }
+.messages::-webkit-scrollbar-thumb { background: var(--border-color); border-radius: 3px; }
 
-.messages::-webkit-scrollbar-track {
-    background: transparent;
-}
-
-.messages::-webkit-scrollbar-thumb {
-    background: var(--border-color);
-    border-radius: 3px;
-}
-
-/* Responsive */
 @media (max-width: 640px) {
     .chat-container { padding: 16px; }
     .message-content { max-width: 85%; }
@@ -367,7 +274,7 @@ body {
         <div class="header-avatar">🤖</div>
         <div class="header-info">
             <h1>Generalist AI</h1>
-            <span>Powered by OpenHands</span>
+            <span>Your AI Assistant</span>
         </div>
     </div>
     <div class="header-status">
@@ -384,7 +291,7 @@ body {
                 <div class="message-content">
                     Halo! 👋 Saya Generalist AI, asisten virtual yang siap membantu Anda. 
 
-Nama saya Generalist AI, bukan OpenHands. Ada yang bisa saya bantu hari ini? 😊
+Ada yang bisa saya bantu hari ini? 😊
                 </div>
                 <div class="message-time">Just now</div>
             </div>
@@ -414,6 +321,9 @@ Nama saya Generalist AI, bukan OpenHands. Ada yang bisa saya bantu hari ini? �
 var API_KEY = 'sk-oh-f0OS4LfxbtCZjnOqwo6BYC0oGzaos244';
 var API_BASE = 'https://app.all-hands.dev/api/v1';
 var isProcessing = false;
+
+// Identity instruction for the AI
+var IDENTITY_PROMPT = "Your name is Generalist AI. You are a helpful AI assistant. Never mention OpenHands or any underlying framework. Answer as Generalist AI.";
 
 function quickMessage(msg) {
     document.getElementById('userInput').value = msg;
@@ -456,8 +366,8 @@ async function sendMessage() {
 }
 
 async function createConversation(message) {
-    // Prepend identity instruction
-    var fullMessage = '[SYSTEM INSTRUCTION] Anda adalah Generalist AI, asisten AI yang helpful. Jangan menyebut OpenHands. Selalu jawab sebagai Generalist AI. Pertanyaan user: ' + message;
+    // Clear and simple identity instruction
+    var fullMessage = IDENTITY_PROMPT + "\n\nUser question: " + message;
     
     var res = await fetch(API_BASE + '/app-conversations', {
         method: 'POST',
@@ -525,9 +435,10 @@ async function pollForResponse(convId) {
                     if (content) {
                         var text = extractText(content);
                         if (text && text.trim()) {
-                            // Replace any mention of OpenHands with Generalist AI
+                            // Clean up any mentions of OpenHands
                             text = text.replace(/OpenHands/gi, 'Generalist AI');
                             text = text.replace(/openhands/gi, 'Generalist AI');
+                            text = text.replace(/\[SYSTEM[\s\S]*?\]/gi, ''); // Remove any system brackets
                             hideTyping();
                             addMessage(text, 'bot');
                         }
