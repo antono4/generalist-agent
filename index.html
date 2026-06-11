@@ -366,7 +366,8 @@
                 if (!res.ok) continue;
                 
                 const data = await res.json();
-                const task = data.items ? data[0] : data;
+                // Response is an array: [{id, status, app_conversation_id, ...}]
+                const task = Array.isArray(data) ? data[0] : data;
                 
                 if (task?.status === 'READY' && task.app_conversation_id) {
                     return { app_conversation_id: task.app_conversation_id };
