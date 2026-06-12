@@ -589,7 +589,7 @@ body {
 <header class="header">
     <div class="header-left">
         <div class="header-avatar">
-            <img src="https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzJqc3h4eXhhNnRibXNmdm5tbjNkN3RibnVtb3o4Y3R0MnE3ZWt3ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/SA1uWeCL2K5As/source.gif" alt="AI Avatar">
+            <img src="https://api.dicebear.com/7.x/bottts-neutral/svg?seed=generalist&backgroundColor=6366f1" alt="AI Avatar">
         </div>
         <div class="header-info">
             <h1>Generalist AI</h1>
@@ -787,8 +787,10 @@ async function createConversation(message) {
         // Check for id (start-task pattern)
         if (data.id) {
             console.log('Got start-task id:', data.id, ', polling for app_conversation_id...');
-            for (let i = 0; i < 30; i++) {
-                await sleep(2000);
+            let delay = 300;
+            for (let i = 0; i < 60; i++) {
+                await sleep(delay);
+                delay = Math.min(delay * 1.2, 1500);
                 const r = await fetch(API_BASE + '/app-conversations/start-tasks?ids=' + data.id, {
                     headers: { 'Authorization': 'Bearer ' + API_KEY }
                 });
@@ -826,9 +828,11 @@ async function createConversation(message) {
 async function pollForResponse(convId) {
     let lastIndex = 0;
     let pollCount = 0;
+    let baseDelay = 300; // Start with 300ms
+    let maxDelay = 1500; // Cap at 1.5 seconds
 
 
-    while (pollCount < 40) {
+    while (pollCount < 80) {
         try {
             const res = await fetch(API_BASE + '/conversation/' + convId + '/events/search?limit=50', {
                 headers: {
@@ -839,14 +843,19 @@ async function pollForResponse(convId) {
 
 
             if (!res.ok) {
-                await sleep(2000);
+                await sleep(baseDelay);
                 pollCount++;
+                baseDelay = Math.min(baseDelay * 1.2, maxDelay);
                 continue;
             }
 
 
             const data = await res.json();
             const events = data.items || [];
+
+
+            // Reset delay on successful response
+            baseDelay = 300;
 
 
             for (let i = lastIndex; i < events.length; i++) {
@@ -931,7 +940,9 @@ async function pollForResponse(convId) {
 
 
         pollCount++;
-        await sleep(2000);
+        await sleep(baseDelay);
+        // Gradually increase delay
+        baseDelay = Math.min(baseDelay * 1.1, maxDelay);
     }
 
 
