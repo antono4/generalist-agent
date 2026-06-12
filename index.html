@@ -180,121 +180,118 @@ body {
     overflow: hidden;
 }
 
-/* Messages Area */
+/* Messages Area - WhatsApp style chat background */
 .messages {
     flex: 1;
     display: flex;
     flex-direction: column;
-    gap: 20px;
+    gap: 0;
     overflow-y: auto;
-    padding: 24px;
+    padding: 8px 0;
     scroll-behavior: smooth;
-    background: linear-gradient(180deg, var(--bg-bot) 0%, var(--bg-secondary) 100%);
+    /* WA chat background - teal/green gradient */
+    background: linear-gradient(180deg, #e4ddd1 0%, #e4ddd1 100%);
+    /* Add subtle pattern */
+    background-image: url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23c8c4bd' fill-opacity='0.15'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E");
 }
 
-/* Message */
+/* Message - WhatsApp Style */
 .message {
     display: flex;
-    gap: 14px;
-    animation: messageIn 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    animation: messageIn 0.3s ease-out;
+    padding: 2px 16px;
 }
 
 @keyframes messageIn {
-    from { opacity: 0; transform: translateY(12px) scale(0.98); }
-    to { opacity: 1; transform: translateY(0) scale(1); }
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
 }
 
-.message.user { flex-direction: row-reverse; }
+.message.user { 
+    justify-content: flex-end; 
+}
 
+.message.bot { 
+    justify-content: flex-start; 
+}
+
+/* Hide avatars in chat - WA style */
 .message-avatar {
-    width: 40px;
-    height: 40px;
-    border-radius: 14px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    overflow: hidden;
-    flex-shrink: 0;
-    background: var(--bg-tertiary);
-    border: 1px solid var(--border-color);
+    display: none;
 }
 
-.message.bot .message-avatar {
-    background: linear-gradient(135deg, var(--accent-primary), var(--accent-secondary));
-    border: none;
-    box-shadow: var(--shadow-glow);
-}
-
-.message.user .message-avatar {
-    background: linear-gradient(135deg, #64748b, #94a3b8);
-}
-
-.message-avatar img {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
+/* Bubble wrapper */
 .message-bubble {
     max-width: 75%;
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
+    position: relative;
 }
 
+/* Message content - WA bubble style */
 .message-content {
-    padding: 14px 18px;
-    border-radius: 18px;
-    line-height: 1.7;
-    font-size: 0.9375rem;
+    padding: 10px 14px;
+    border-radius: 7px;
+    line-height: 1.5;
+    font-size: 0.9rem;
     word-wrap: break-word;
+    position: relative;
 }
 
+/* Bot message bubble - left aligned, white background */
 .message.bot .message-content {
-    background: var(--bg-bot);
-    border: 1px solid rgba(255, 255, 255, 0.05);
-    border-radius: 18px 18px 18px 4px;
-    color: var(--text-primary);
+    background: #ffffff;
+    color: #111b21;
+    border-radius: 7px 7px 7px 0;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
 }
 
+/* User message bubble - right aligned, green (WA style) */
 .message.user .message-content {
-    background: linear-gradient(135deg, var(--accent-primary), #5558e3);
-    color: white;
-    border-radius: 18px 18px 4px 18px;
-    box-shadow: 0 4px 15px rgba(99, 102, 241, 0.3);
+    background: #d9fdd8;
+    color: #111b21;
+    border-radius: 7px 7px 0 7px;
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.08);
 }
 
+/* Message metadata - time and status */
 .message-meta {
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding: 0 6px;
+    justify-content: flex-end;
+    gap: 4px;
+    margin-top: 2px;
+    padding: 0 4px;
 }
-
-.message.user .message-meta { justify-content: flex-end; }
 
 .message-time {
-    font-size: 0.65rem;
-    color: var(--text-muted);
-    font-weight: 400;
+    font-size: 0.7rem;
+    opacity: 0.8;
 }
 
-/* Code blocks */
+.message.user .message-time { color: rgba(255,255,255,0.75); }
+.message.bot .message-time { color: var(--text-muted); }
+
+/* Double tick for user messages */
+.message-status {
+    font-size: 0.65rem;
+    opacity: 0.7;
+}
+
+/* Code blocks - WA style dark code */
 .message-content pre {
-    background: var(--bg-primary);
-    padding: 14px 18px;
-    border-radius: 12px;
+    background: #1f1f1f;
+    color: #d4d4d4;
+    padding: 10px 12px;
+    border-radius: 6px;
     overflow-x: auto;
-    margin: 10px 0;
+    margin: 8px 0;
     font-family: 'Fira Code', monospace;
-    font-size: 0.85rem;
-    line-height: 1.5;
-    border: 1px solid var(--border-color);
+    font-size: 0.8rem;
+    line-height: 1.4;
 }
 
 .message-content code {
     font-family: 'Fira Code', 'Consolas', monospace;
-    font-size: 0.85rem;
+    font-size: 0.8rem;
 }
 
 .message-content pre code {
@@ -303,10 +300,25 @@ body {
 }
 
 .message-content :not(pre) > code {
-    background: rgba(99, 102, 241, 0.15);
-    padding: 3px 8px;
-    border-radius: 6px;
-    color: var(--accent-secondary);
+    background: rgba(0, 0, 0, 0.08);
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 0.85em;
+    color: #0f0f0f;
+}
+
+/* Continuous messages from same sender - group style */
+.message.bot + .message.bot .message-content,
+.message.user + .message.user .message-content {
+    margin-top: -8px;
+}
+
+.message.bot + .message.bot {
+    padding-top: 0;
+}
+
+.message.user + .message.user {
+    padding-top: 0;
 }
 
 /* Welcome Section */
