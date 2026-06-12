@@ -872,26 +872,22 @@ async function handleFileSelect(event) {
     const fileName = file.name;
     const fileSize = formatFileSize(file.size);
     
-    // Show file message immediately
-    addMessage('📎 Mengirim file: ' + fileName + ' (' + fileSize + ')', 'user');
-    
     try {
         // For images, read and display inline
         if (file.type.startsWith('image/')) {
             const reader = new FileReader();
             reader.onload = function(e) {
-                const imageHtml = '<img src="' + e.target.result + '" alt="' + fileName + '" style="max-width: 300px; border-radius: 8px; margin: 8px 0;">';
-                addMessage(imageHtml, 'user');
+                const imageHtml = '<img src="' + e.target.result + '" alt="' + fileName + '" style="max-width: 280px; border-radius: 8px; margin: 4px 0; display: block;">';
+                addImageMessage(imageHtml, fileName, fileSize);
             };
             reader.readAsDataURL(file);
-        }
-        
-        // Send file info to AI
-        const fileInfo = `File uploaded: ${fileName} (${fileSize}, ${file.type})`;
-        const convId = await createConversation('Saya mengunggah file: ' + fileName + ' (' + fileSize + '). Tolong bantu saya dengan file ini.');
-        
-        if (convId) {
-            await pollForResponse(convId);
+        } else {
+            // Non-image files
+            addMessage('📎 File: ' + fileName + ' (' + fileSize + ')', 'user');
+            const convId = await createConversation('Saya mengunggah file: ' + fileName + ' (' + fileSize + '). Tolong bantu saya dengan file ini.');
+            if (convId) {
+                await pollForResponse(convId);
+            }
         }
     } catch (e) {
         addMessage('Gagal mengunggah file: ' + e.message, 'bot');
@@ -899,6 +895,24 @@ async function handleFileSelect(event) {
     
     // Reset file input
     event.target.value = '';
+}
+
+// Add image message (doesn't escape HTML)
+function addImageMessage(imageHtml, fileName, fileSize) {
+    const container = document.getElementById('messages');
+    const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    // Remove welcome section if exists
+    const welcomeSection = container.querySelector('.welcome-section');
+    if (welcomeSection) {
+        welcomeSection.remove();
+    }
+
+    const div = document.createElement('div');
+    div.className = 'message user';
+    div.innerHTML = '<div class="message-bubble"><div class="message-content">' + imageHtml + '<div style="font-size: 0.7rem; color: #667781; margin-top: 4px;">' + fileName + ' (' + fileSize + ')</div></div><div class="message-meta"><span class="message-time">' + time + '</span><span class="message-status">✓✓</span></div></div>';
+    container.appendChild(div);
+    container.scrollTop = container.scrollHeight;
 }
 
 // Format file size
