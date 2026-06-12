@@ -585,25 +585,117 @@ body {
     border-radius: 50%;
 }
 
-/* Responsive */
+/* Responsive - Tablet */
 @media (max-width: 768px) {
     .header { padding: 12px 16px; }
     .header-info span { display: none; }
     .header-btn { width: 36px; height: 36px; }
-    .chat-container { padding: 0 16px; }
+    .main-container { padding: 12px; }
+    .chat-container { 
+        border-radius: 16px;
+    }
+    .messages { padding: 16px; }
     .message-content { max-width: 85%; font-size: 0.9rem; }
-    .quick-actions { justify-content: flex-start; overflow-x: auto; flex-wrap: nowrap; padding-bottom: 4px; }
-    .quick-btn { flex-shrink: 0; }
-    .suggestions-grid { grid-template-columns: 1fr; }
-    .welcome-section { padding: 30px 16px; }
+    .suggestions-grid { grid-template-columns: 1fr; gap: 10px; }
+    .welcome-section { padding: 24px 16px; }
     .welcome-icon { width: 64px; height: 64px; font-size: 28px; }
     .welcome-section h2 { font-size: 1.4rem; }
+    .input-area { padding: 12px 16px; }
 }
 
+/* Responsive - Mobile Android */
 @media (max-width: 480px) {
+    /* Safe area for notch devices */
+    body {
+        padding-top: env(safe-area-inset-top);
+        padding-bottom: env(safe-area-inset-bottom);
+        padding-left: env(safe-area-inset-left);
+        padding-right: env(safe-area-inset-right);
+    }
+    
+    .header { 
+        padding: 10px 12px;
+        padding-top: calc(10px + env(safe-area-inset-top));
+    }
+    .header-avatar { width: 40px; height: 40px; }
+    .header-info h1 { font-size: 1rem; }
+    .header-status { padding: 6px 10px; }
+    .status-text { font-size: 0.7rem; }
+    
+    .main-container { padding: 8px; }
+    .chat-container { 
+        border-radius: 12px;
+        flex: 1;
+        min-height: 0;
+    }
+    .messages { 
+        padding: 12px;
+        gap: 14px;
+    }
+    
+    .message { gap: 10px; }
+    .message-avatar { width: 32px; height: 32px; border-radius: 10px; }
+    .message-content { 
+        padding: 12px 14px; 
+        font-size: 0.875rem;
+        max-width: 88%;
+    }
+    .message.bot .message-content { border-radius: 14px 14px 14px 4px; }
+    .message.user .message-content { border-radius: 14px 14px 4px 14px; }
+    
+    .welcome-section { padding: 20px 12px; gap: 16px; }
+    .welcome-icon { width: 56px; height: 56px; font-size: 24px; border-radius: 16px; }
+    .welcome-section h2 { font-size: 1.25rem; }
+    .welcome-section p { font-size: 0.875rem; }
+    
+    .suggestion-card { padding: 14px; }
+    .suggestion-card h4 { font-size: 0.8rem; }
+    .suggestion-card p { font-size: 0.7rem; }
+    
     .input-container { gap: 8px; }
-    .send-btn { width: 44px; height: 44px; }
-    .input-wrapper input { padding: 12px 14px; }
+    .input-wrapper { border-radius: 16px; }
+    .input-wrapper input { 
+        padding: 12px 14px; 
+        font-size: 0.9rem;
+    }
+    .attach-btn, .send-btn { 
+        width: 44px; 
+        height: 44px;
+        min-width: 44px;
+    }
+    .attach-btn svg, .send-btn svg { width: 18px; height: 18px; }
+}
+
+/* Landscape mode on mobile */
+@media (max-height: 500px) and (orientation: landscape) {
+    .header { padding: 8px 16px; }
+    .header-avatar { width: 36px; height: 36px; }
+    .welcome-section { padding: 16px; gap: 12px; }
+    .welcome-icon { width: 48px; height: 48px; font-size: 20px; }
+    .main-container { padding: 8px; }
+    .chat-container { flex-direction: row; }
+    .messages { flex: 1; padding: 12px; }
+    .input-area { 
+        padding: 8px 12px;
+        min-width: 200px;
+        max-width: 300px;
+        border-top: none;
+        border-left: 1px solid var(--border-color);
+    }
+    .input-container { flex-direction: column; gap: 8px; }
+    .attach-btn, .send-btn { width: 40px; height: 40px; }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+    .header-btn, .send-btn, .attach-btn, .suggestion-card, .quick-btn {
+        min-height: 44px;
+        min-width: 44px;
+    }
+    
+    .input-wrapper:focus-within {
+        box-shadow: 0 0 0 2px var(--accent-primary);
+    }
 }
 </style>
 </head>
