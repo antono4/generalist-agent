@@ -975,7 +975,7 @@ const cleanResponse = (text) => {
 const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 
-const BOT_AVATAR_URL = 'https://media.giphy.com/media/v1.Y2lkPTc5MGI3NjExNzJqc3h4eXhhNnRibXNmdm5tbjNkN3RibnVtb3o4Y3R0MnE3ZWt3ZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/SA1uWeCL2K5As/source.gif';
+const BOT_AVATAR_URL = 'https://api.dicebear.com/7.x/bottts-neutral/svg?seed=assistant&backgroundColor=6366f1';
 
 
 function addMessage(content, type) {
@@ -990,7 +990,7 @@ function addMessage(content, type) {
 
     const avatarHtml = type === 'bot' 
         ? '<img src="' + BOT_AVATAR_URL + '" alt="AI Avatar">' 
-        : '<img src="https://api.dicebear.com/7.x/bottts/svg?seed=user" alt="User Avatar">';
+        : '<img src="https://api.dicebear.com/7.x/pixel-art/svg?seed=user&backgroundColor=64748b" alt="User Avatar">';
 
     const div = document.createElement('div');
     div.className = 'message ' + type;
