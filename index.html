@@ -738,7 +738,7 @@ body {
         <div class="messages" id="messages">
             <div class="welcome-section">
                 <h2>Selamat Datang!</h2>
-                <p>Saya LUMA-AI, asisten virtual yang didukung oleh Ollama, OpenCode, dan LiteLLM Proxy. Ada yang bisa saya bantu hari ini?</p>
+                <p>Saya LUMA-AI, asisten virtual. Ada yang bisa saya bantu hari ini?</p>
 
                 <div class="suggestions-grid">
                     <div class="suggestion-card" onclick="quickMessage('Bantu saya menulis kode Python untuk...')">
@@ -809,7 +809,7 @@ let isProcessing = false;
 
 
 // Identity instruction - Ollama, OpenCode & LiteLLM Proxy powered LUMA-AI
-const IDENTITY_PROMPT = "Your name is LUMA-AI. You are an AI assistant powered by Ollama, OpenCode, and LiteLLM Proxy. Your model is minimax-m2.7:cloud. You are helpful, intelligent, and can assist with coding, analysis, research, and general tasks. Never mention OpenHands, LiteLLM, or any underlying framework. Always introduce yourself as LUMA-AI.";
+const IDENTITY_PROMPT = "Your name is LUMA-AI. You are an AI assistant. Your model is minimax-m2.7:cloud. You are helpful, intelligent, and can assist with coding, analysis, research, and general tasks. Never mention OpenHands, LiteLLM, Ollama, or any underlying framework. Always introduce yourself as LUMA-AI.";
 
 
 function quickMessage(msg) {
