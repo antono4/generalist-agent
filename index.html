@@ -681,11 +681,11 @@ const getApiBase = () => {
     const port = window.location.port;
     
     // Map specific work hosts to their API endpoints
-    if (host.includes('work-1-vbwuqgzvokxqvweg') || host.includes('work-1')) {
-        return 'https://work-1-vbwuqgzvokxqvweg.prod-runtime.all-hands.dev/api/v1';
+    if (host.includes('work-1-gtstjilxibvymsmv') || host.includes('work-1')) {
+        return 'https://work-1-gtstjilxibvymsmv.prod-runtime.all-hands.dev/api/v1';
     }
-    if (host.includes('work-2-vbwuqgzvokxqvweg') || host.includes('work-2')) {
-        return 'https://work-2-vbwuqgzvokxqvweg.prod-runtime.all-hands.dev/api/v1';
+    if (host.includes('work-2-gtstjilxibvymsmv') || host.includes('work-2')) {
+        return 'https://work-2-gtstjilxibvymsmv.prod-runtime.all-hands.dev/api/v1';
     }
     // Default to app.all-hands.dev
     return 'https://app.all-hands.dev/api/v1';
@@ -775,13 +775,18 @@ async function createConversation(message) {
 
 
         const data = await res.json();
-        console.log('Create conversation response:', data);
+        console.log('Create conversation response:', JSON.stringify(data));
 
 
+        // Direct app_conversation_id
         if (data.app_conversation_id) {
+            console.log('Got app_conversation_id directly:', data.app_conversation_id);
             return data.app_conversation_id;
-        } else if (data.id) {
-            console.log('Waiting for app_conversation_id, polling...');
+        }
+        
+        // Check for id (start-task pattern)
+        if (data.id) {
+            console.log('Got start-task id:', data.id, ', polling for app_conversation_id...');
             for (let i = 0; i < 30; i++) {
                 await sleep(2000);
                 const r = await fetch(API_BASE + '/app-conversations/start-tasks?ids=' + data.id, {
@@ -789,14 +794,28 @@ async function createConversation(message) {
                 });
                 if (r.ok) {
                     const tasks = await r.json();
-                    console.log('Poll', i, 'tasks:', tasks);
+                    console.log('Poll', i, 'tasks:', JSON.stringify(tasks));
                     const task = tasks[0];
-                    if (task && task.status === 'READY' && task.app_conversation_id) {
-                        return task.app_conversation_id;
+                    if (task) {
+                        // Check different possible field names
+                        const convId = task.app_conversation_id || task.conversation_id || task.id;
+                        if (task.status === 'READY' && convId) {
+                            console.log('Got app_conversation_id from task:', convId);
+                            return convId;
+                        }
                     }
                 }
             }
         }
+        
+        // Check for conversation URL
+        if (data.conversation_url) {
+            const match = data.conversation_url.match(/\/conversation\/([^/]+)/);
+            if (match) {
+                return match[1];
+            }
+        }
+        
     } catch (e) {
         console.error('Create conversation exception:', e);
     }
@@ -832,10 +851,20 @@ async function pollForResponse(convId) {
 
             for (let i = lastIndex; i < events.length; i++) {
                 const event = events[i];
+                console.log('Event:', JSON.stringify(event));
 
 
+                // Handle MessageEvent - check multiple possible structures
                 if (event.kind === 'MessageEvent' && (event.source === 'agent' || event.source === 'assistant')) {
-                    const content = event.llm_message && event.llm_message.content;
+                    let content = null;
+                    // Try different possible structures
+                    if (event.llm_message && event.llm_message.content) {
+                        content = event.llm_message.content;
+                    } else if (event.message && event.message.content) {
+                        content = event.message.content;
+                    } else if (event.message) {
+                        content = event.message;
+                    }
                     if (content) {
                         let text = extractText(content);
                         if (text && text.trim()) {
@@ -847,12 +876,14 @@ async function pollForResponse(convId) {
                 }
 
 
+                // Handle ObservationEvent - tool results
                 if (event.kind === 'ObservationEvent') {
                     const obs = event.observation;
                     let content = '';
                     if (obs) {
                         if (obs.content) content = extractText(obs.content);
                         else if (obs.output) content = extractText(obs.output);
+                        else if (obs.error) content = 'Error: ' + extractText(obs.error);
                     }
                     if (content && content.trim()) {
                         content = cleanResponse(content);
@@ -862,9 +893,31 @@ async function pollForResponse(convId) {
                 }
 
 
-                if (event.kind === 'ConversationStateUpdateEvent' &&
-                    event.key === 'execution_status' && event.value === 'finished') {
-                    return;
+                // Handle ActionEvent - display tool calls
+                if (event.kind === 'ActionEvent') {
+                    const action = event.action || event.tool_call;
+                    if (action) {
+                        let text = '';
+                        if (action.command) text = 'Executing: ' + action.command;
+                        else if (action.instructions) text = 'Instructions: ' + action.instructions;
+                        else if (action.code) text = 'Running code...';
+                        
+                        if (text && text.trim()) {
+                            hideTyping();
+                            addMessage(text, 'bot');
+                        }
+                    }
+                }
+
+
+                // Handle ConversationStateUpdateEvent
+                if (event.kind === 'ConversationStateUpdateEvent') {
+                    if (event.key === 'execution_status') {
+                        console.log('Execution status:', event.value);
+                        if (event.value === 'finished' || event.value === 'failed') {
+                            return;
+                        }
+                    }
                 }
             }
 
@@ -894,6 +947,17 @@ const extractText = (content) => {
     }
     if (content && content.text) return content.text;
     return '';
+};
+
+
+const cleanResponse = (text) => {
+    if (!text) return '';
+    // Remove thinking tags if present
+    text = text.replace(/<start_of_thought>[\s\S]*?<end_of_thought>/gi, '');
+    text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+    // Trim whitespace
+    text = text.trim();
+    return text;
 };
 
 
@@ -948,6 +1012,22 @@ const escapeHtml = (text) => {
     div.textContent = text;
     return div.innerHTML;
 };
+
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+    console.log('=== Generalist AI initialized ===');
+    console.log('API_BASE:', API_BASE);
+    console.log('API_KEY:', API_KEY ? API_KEY.substring(0, 10) + '...' : 'not set');
+    console.log('WORKSPACE_ID:', WORKSPACE_ID || 'not set');
+    console.log('Location:', window.location.href);
+    
+    // Update status indicator
+    const statusText = document.querySelector('.status-text');
+    if (statusText) {
+        statusText.textContent = 'Connected';
+    }
+});
 </script>
 </body>
 </html>
