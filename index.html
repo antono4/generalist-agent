@@ -1231,7 +1231,14 @@ function addMessage(content, type) {
     
     div.innerHTML = '<div class="message-bubble"><div class="message-content">' + safeContent + '</div><div class="message-meta"><span class="message-time">' + time + '</span><span class="message-status">✓✓</span></div></div>';
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    
+    // Use requestAnimationFrame to ensure content is rendered before scrolling
+    requestAnimationFrame(() => {
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
 }
 
 
@@ -1243,7 +1250,12 @@ function showTyping() {
     div.className = 'message bot';
     div.innerHTML = '<div class="message-bubble"><div class="typing-indicator"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
     container.appendChild(div);
-    container.scrollTop = container.scrollHeight;
+    requestAnimationFrame(() => {
+        container.scrollTo({
+            top: container.scrollHeight,
+            behavior: 'smooth'
+        });
+    });
 }
 
 
