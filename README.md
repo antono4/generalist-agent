@@ -21,7 +21,8 @@
 | 🌙 **Dark/Light Theme** | Toggle antar tema dengan Ctrl+T |
 | ⌨️ **Keyboard Shortcuts** | Ctrl+Enter send, Ctrl+E export, Ctrl+L clear |
 | 📤 **Export Chat** | Download conversation sebagai Markdown |
-| ⚡ **Real-time Response** | Ultra-fast polling dengan streaming effect |
+| 🔌 **Custom LLM API** | Gunakan API key dari free-llm-api-keys (GPT-5.5, Claude, Gemini, dll) |
+| ⚡ **Real-time Response** | Fast polling dengan rate limit compliance |
 | 🎯 **Quick Actions** | Pre-built prompts untuk task umum |
 
 ### Core Capabilities
