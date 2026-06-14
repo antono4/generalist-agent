@@ -882,7 +882,8 @@ async function startConversation(initialMessage) {
 
 async function pollEvents(convId) {
     let consecutiveEmptyPolls = 0;
-    const baseDelay = 10; // Start with 10ms polling
+    // API rate limit: 100 requests per minute = 600ms minimum between requests
+    const baseDelay = 600; // Safe interval for rate limit compliance
     
     while (true) {
         try {
@@ -891,7 +892,7 @@ async function pollEvents(convId) {
             });
             
             if (!response.ok) { 
-                await sleep(baseDelay * 2); 
+                await sleep(baseDelay); 
                 consecutiveEmptyPolls = 0;
                 continue; 
             }
@@ -902,7 +903,7 @@ async function pollEvents(convId) {
             // Adaptive polling: slow down if no new events
             if (items.length === 0) {
                 consecutiveEmptyPolls++;
-                await sleep(baseDelay + (consecutiveEmptyPolls * 5)); // Gradually slow down
+                await sleep(baseDelay + (consecutiveEmptyPolls * 100)); // Gradually slow down
                 continue;
             }
             
@@ -922,12 +923,12 @@ async function pollEvents(convId) {
                 return;
             }
             
-            // Fast polling when active
-            await sleep(baseDelay);
+            // Polling with slight speedup when active (but still under rate limit)
+            await sleep(baseDelay - 100); // 500ms when actively receiving events
             
         } catch (e) { 
             console.log('Poll error:', e); 
-            await sleep(baseDelay * 3);
+            await sleep(baseDelay * 2); // Back off on errors
         }
     }
 }
