@@ -411,6 +411,32 @@ body {
 .bubble ul, .bubble ol { margin: 8px 0; padding-left: 20px; }
 .bubble li { margin: 4px 0; }
 
+/* Copy Button */
+.copy-btn {
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    padding: 6px 8px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text-secondary);
+    cursor: pointer;
+    font-size: 14px;
+    opacity: 0;
+    transition: all 0.2s ease;
+}
+
+.bubble pre:hover .copy-btn {
+    opacity: 1;
+}
+
+.copy-btn:hover {
+    background: var(--accent);
+    color: white;
+    border-color: var(--accent);
+}
+
 /* Input Area */
 .input-area {
     padding: 20px 0;
@@ -457,6 +483,23 @@ body {
 
 .input-box textarea:focus { outline: none; }
 .input-box textarea::placeholder { color: var(--text-muted); }
+
+.input-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 4px 12px 8px;
+    font-size: 0.7rem;
+}
+
+.char-count {
+    color: var(--text-muted);
+}
+
+.input-hint {
+    color: var(--text-muted);
+    opacity: 0.7;
+}
 
 .send-btn {
     width: 48px;
@@ -706,6 +749,10 @@ body {
         <div class="input-wrapper">
             <div class="input-box">
                 <textarea id="messageInput" placeholder="Type your message... (Ctrl+Enter to send)" rows="1"></textarea>
+                <div class="input-footer">
+                    <span id="charCount" class="char-count">0</span>
+                    <span class="input-hint">Ctrl+Enter to send</span>
+                </div>
             </div>
             <button class="send-btn" onclick="sendMessage()">
                 <i class="ri-send-plane-fill"></i>
@@ -757,6 +804,18 @@ themeIcon.className = savedTheme === 'light' ? 'ri-moon-line' : 'ri-sun-line';
 messageInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+    
+    // Update char count
+    const charCount = document.getElementById('charCount');
+    if (charCount) {
+        charCount.textContent = this.value.length;
+    }
+    
+    // Enable/disable send button
+    const sendBtn = document.querySelector('.send-btn');
+    if (sendBtn && !sendBtn.disabled) {
+        sendBtn.style.opacity = this.value.trim() ? '1' : '0.5';
+    }
 });
 
 messageInput.addEventListener('keydown', function(e) {
@@ -1004,6 +1063,13 @@ async function sendMessage() {
     const text = messageInput.value.trim();
     if (!text) return;
     
+    // Disable send while processing
+    const sendBtn = document.querySelector('.send-btn');
+    const textarea = document.getElementById('messageInput');
+    sendBtn.disabled = true;
+    sendBtn.style.opacity = '0.5';
+    textarea.disabled = true;
+    
     // Remove welcome screen
     const welcome = document.getElementById('welcome');
     if (welcome) welcome.remove();
@@ -1024,8 +1090,14 @@ async function sendMessage() {
     } catch (error) {
         hideTyping();
         setStatus('error', 'Error');
-        addMessage('Error: ' + error.message, 'bot');
-        setTimeout(() => setStatus('ready', 'Ready'), 3000);
+        addMessage(`⚠️ **Error:** ${error.message}\n\n*Tip: Check your API settings or try again.*`, 'bot');
+        setTimeout(() => setStatus('ready', 'Ready'), 5000);
+    } finally {
+        // Re-enable send button
+        sendBtn.disabled = false;
+        sendBtn.style.opacity = '1';
+        textarea.disabled = false;
+        textarea.focus();
     }
 }
 
@@ -1168,7 +1240,14 @@ function cleanResponse(text) {
 function addMessage(content, type) {
     const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
     const avatar = type === 'bot' ? '<i class="ri-robot-line"></i>' : '<i class="ri-user-line"></i>';
-    const safeContent = type === 'bot' ? content : escapeHtml(content);
+    
+    // Render markdown-like formatting for bot messages
+    let safeContent;
+    if (type === 'bot') {
+        safeContent = renderMarkdown(content);
+    } else {
+        safeContent = escapeHtml(content);
+    }
     
     const div = document.createElement('div');
     div.className = 'message ' + type;
@@ -1181,6 +1260,57 @@ function addMessage(content, type) {
     `;
     messagesContainer.appendChild(div);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    // Add copy buttons to code blocks
+    div.querySelectorAll('pre').forEach(pre => {
+        const btn = document.createElement('button');
+        btn.className = 'copy-btn';
+        btn.innerHTML = '<i class="ri-file-copy-line"></i>';
+        btn.onclick = () => {
+            navigator.clipboard.writeText(pre.textContent);
+            btn.innerHTML = '<i class="ri-check-line"></i>';
+            setTimeout(() => btn.innerHTML = '<i class="ri-file-copy-line"></i>', 2000);
+        };
+        pre.style.position = 'relative';
+        pre.appendChild(btn);
+    });
+}
+
+// Simple markdown renderer
+function renderMarkdown(text) {
+    if (!text) return '';
+    
+    // Escape HTML first
+    let html = escapeHtml(text);
+    
+    // Code blocks (```code```)
+    html = html.replace(/```(\w*)\n?([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+    
+    // Inline code (`code`)
+    html = html.replace(/`([^`]+)`/g, '<code>$1</code>');
+    
+    // Bold (**text**)
+    html = html.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+    
+    // Italic (*text*)
+    html = html.replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    
+    // Headers
+    html = html.replace(/^### (.+)$/gm, '<h3>$1</h3>');
+    html = html.replace(/^## (.+)$/gm, '<h2>$1</h2>');
+    html = html.replace(/^# (.+)$/gm, '<h1>$1</h1>');
+    
+    // Links [text](url)
+    html = html.replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');
+    
+    // Lists
+    html = html.replace(/^- (.+)$/gm, '<li>$1</li>');
+    html = html.replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>');
+    
+    // Line breaks
+    html = html.replace(/\n/g, '<br>');
+    
+    return html;
 }
 
 function showTyping() {
