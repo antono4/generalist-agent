@@ -1057,9 +1057,9 @@ function showSettings() {
             </div>
             
             <div style="display: flex; gap: 8px; margin-top: 20px;">
-                <button onclick="saveSettings(); this.closest('.modal-overlay').remove();" 
+                <button onclick="saveSettings();" 
                     style="flex: 1; padding: 10px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 500;">
-                    Save Settings
+                    Save & Test
                 </button>
                 <button onclick="this.closest('.modal-overlay').remove();" 
                     style="padding: 10px 16px; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;">
@@ -1104,8 +1104,60 @@ function saveSettings() {
             showToast('Please enter API Base URL and Key');
             return;
         }
+        
+        // Test the connection
+        testApiConnection(CUSTOM_API_BASE, CUSTOM_API_KEY, CUSTOM_MODEL);
+        
+        // Close modal after 1 second if test succeeds
+        setTimeout(() => {
+            const modal = document.querySelector('.modal-overlay');
+            if (modal) modal.remove();
+        }, 2000);
+    } else {
+        localStorage.setItem('api_mode', 'openhands');
+        showToast('Settings saved! Using OpenHands API');
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) modal.remove();
     }
-    showToast('Settings saved!');
+}
+
+async function testApiConnection(baseUrl, apiKey, model) {
+    showToast('Testing connection...');
+    
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 15000);
+        
+        const response = await fetch(baseUrl + '/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + apiKey
+            },
+            body: JSON.stringify({
+                model: model,
+                messages: [{ role: 'user', content: 'Hi' }],
+                max_tokens: 10
+            }),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (response.ok) {
+            showToast('✅ Connection successful!');
+        } else {
+            const error = await response.json().catch(() => ({}));
+            showToast('❌ Connection failed: ' + (error.error?.message || `HTTP ${response.status}`));
+        }
+    } catch (error) {
+        clearTimeout(timeoutId);
+        if (error.name === 'AbortError') {
+            showToast('❌ Connection timeout');
+        } else {
+            showToast('❌ Connection failed: ' + error.message);
+        }
+    }
 }
 
 // Global shortcuts
@@ -1173,32 +1225,74 @@ async function sendMessage() {
 
 // Custom LLM API (OpenAI-compatible)
 async function sendToCustomLLM(message) {
-    const response = await fetch(CUSTOM_API_BASE + '/chat/completions', {
-        method: 'POST',
-        headers: {
-            'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + CUSTOM_API_KEY
-        },
-        body: JSON.stringify({
-            model: CUSTOM_MODEL,
-            messages: chatHistory
-        })
-    });
-    
-    if (!response.ok) {
-        const error = await response.json().catch(() => ({}));
-        throw new Error(error.error?.message || 'API request failed: ' + response.status);
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30s timeout
+        
+        const response = await fetch(CUSTOM_API_BASE + '/chat/completions', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': 'Bearer ' + CUSTOM_API_KEY
+            },
+            body: JSON.stringify({
+                model: CUSTOM_MODEL,
+                messages: chatHistory,
+                temperature: 0.7,
+                max_tokens: 4096
+            }),
+            signal: controller.signal
+        });
+        
+        clearTimeout(timeoutId);
+        
+        if (!response.ok) {
+            let errorMsg = 'API request failed';
+            try {
+                const errorData = await response.json();
+                errorMsg = errorData.error?.message || errorData.error?.code || errorMsg;
+            } catch (e) {
+                errorMsg = `HTTP ${response.status}: ${response.statusText}`;
+            }
+            throw new Error(errorMsg);
+        }
+        
+        const data = await response.json();
+        const assistantMessage = data.choices[0]?.message?.content || '';
+        
+        hideTyping();
+        if (assistantMessage) {
+            addMessage(assistantMessage, 'bot');
+            chatHistory.push({ role: 'assistant', content: assistantMessage });
+        } else {
+            addMessage('⚠️ **Empty Response:** The API returned no content. Try a different model.', 'bot');
+        }
+        setStatus('ready', 'Ready');
+        
+    } catch (error) {
+        hideTyping();
+        
+        let userMessage = error.message;
+        
+        // Handle specific errors
+        if (error.name === 'AbortError') {
+            userMessage = 'Request timeout - API took too long to respond. Try again or check your API settings.';
+        } else if (error.message.includes('Failed to fetch') || error.message.includes('NetworkError')) {
+            userMessage = 'Network error - This could be a CORS issue, the API is down, or your API key is invalid.\n\n';
+            userMessage += '💡 **Solutions:**\n';
+            userMessage += '- Check if the API URL is correct\n';
+            userMessage += '- Verify your API key is valid\n';
+            userMessage += '- The API might be experiencing downtime\n';
+            userMessage += '- Try using OpenHands mode instead';
+        } else if (error.message.includes('401') || error.message.includes('Unauthorized')) {
+            userMessage = 'Authentication failed - Your API key is invalid or expired.\n\n';
+            userMessage += '💡 Get a new key from: https://github.com/alistaitsacle/free-llm-api-keys';
+        } else if (error.message.includes('429') || error.message.includes('rate limit')) {
+            userMessage = 'Rate limit exceeded - Too many requests. Please wait a moment and try again.';
+        }
+        
+        throw new Error(userMessage);
     }
-    
-    const data = await response.json();
-    const assistantMessage = data.choices[0]?.message?.content || '';
-    
-    hideTyping();
-    if (assistantMessage) {
-        addMessage(assistantMessage, 'bot');
-        chatHistory.push({ role: 'assistant', content: assistantMessage });
-    }
-    setStatus('ready', 'Ready');
 }
 
 async function startConversation(initialMessage) {
