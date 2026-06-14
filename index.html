@@ -23,6 +23,7 @@
     --text-muted: #71717a;
     --border: rgba(255, 255, 255, 0.06);
     --success: #22c55e;
+    --warning: #f59e0b;
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 14px;
@@ -128,25 +129,6 @@ body {
 
 .brand-text span { font-size: 0.7rem; color: var(--text-muted); }
 
-.model-selector {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-}
-
-.model-select {
-    padding: 6px 12px;
-    background: var(--bg-card);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-md);
-    color: var(--text-primary);
-    font-size: 0.75rem;
-    font-family: 'Geist Mono', monospace;
-    cursor: pointer;
-}
-
-.model-select:focus { outline: none; border-color: var(--accent); }
-
 .status-pill {
     display: flex; align-items: center; gap: 7px;
     padding: 6px 12px;
@@ -157,6 +139,9 @@ body {
 }
 
 .status-dot { width: 6px; height: 6px; background: var(--success); border-radius: 50%; animation: pulse 2s infinite; }
+
+.status-dot.starting { background: var(--warning); animation: pulse 0.5s infinite; }
+.status-dot.error { background: #ef4444; }
 
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
 
@@ -305,6 +290,7 @@ body {
 
 .send-btn:hover { transform: scale(1.05); box-shadow: 0 0 24px var(--accent-glow); }
 .send-btn:active { transform: scale(0.95); }
+.send-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 .send-btn svg { width: 18px; height: 18px; }
 
 .typing { display: flex; align-items: center; gap: 8px; padding: 12px 16px; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius-lg) var(--radius-lg) var(--radius-lg) 4px; width: fit-content; }
@@ -315,11 +301,38 @@ body {
 
 @keyframes bounce { 0%, 100% { transform: translateY(0); opacity: 0.4; } 50% { transform: translateY(-5px); opacity: 1; } }
 
+.starting-overlay {
+    position: fixed;
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: rgba(10, 10, 11, 0.9);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+    animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+.starting-spinner {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    animation: spin 1s linear infinite;
+    margin-bottom: 20px;
+}
+
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.starting-text { font-size: 1rem; color: var(--text-secondary); margin-bottom: 8px; }
+.starting-subtext { font-size: 0.8rem; color: var(--text-muted); }
+
 @media (max-width: 600px) {
     .app-wrapper { padding: 0 16px; }
     .msg-wrap { max-width: 88%; }
     .feature-grid { grid-template-columns: 1fr; }
-    .model-selector { display: none; }
 }
 </style>
 </head>
@@ -335,22 +348,17 @@ body {
 <div class="app-wrapper">
     <header class="top-bar">
         <div class="top-bar-left">
-            <div class="logo">⚡</div>
+            <div class="logo">🤖</div>
             <div class="brand-text">
                 <h1>Generalist Agent</h1>
-                <span>Powered by Fast LLM Engine</span>
+                <span>Powered by OpenHands</span>
             </div>
         </div>
         <div class="top-bar-right">
-            <div class="model-selector">
-                <select id="modelSelect" class="model-select">
-                    <option value="gpt-4o">GPT-4o (Fastest)</option>
-                    <option value="gpt-4o-mini">GPT-4o Mini</option>
-                    <option value="claude-sonnet-4-20250514">Claude Sonnet 4</option>
-                    <option value="anthropic.claude-4-sonnet-20250514">Claude 4 Sonnet</option>
-                </select>
+            <div class="status-pill">
+                <div id="statusDot" class="status-dot"></div>
+                <span id="statusText">Ready</span>
             </div>
-            <div class="status-pill"><div class="status-dot"></div><span>Ready</span></div>
             <button class="icon-btn" onclick="clearChat()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             </button>
@@ -360,14 +368,14 @@ body {
     <div class="chat-panel">
         <div id="messages" class="chat-messages">
             <div class="welcome" id="welcomeScreen">
-                <div class="welcome-icon">⚡</div>
-                <h2 class="welcome-title">Generalist Agent Engine</h2>
-                <p class="welcome-desc">High-speed AI assistant with multiple LLM engines. Select your preferred model above.</p>
+                <div class="welcome-icon">🤖</div>
+                <h2 class="welcome-title">Welcome to Generalist Agent</h2>
+                <p class="welcome-desc">Your versatile AI assistant for development and automation tasks.</p>
                 <div class="feature-grid">
-                    <div class="feature-card"><span>🚀</span><span>GPT-4o Engine</span></div>
-                    <div class="feature-card"><span>🧠</span><span>Claude 4 Engine</span></div>
-                    <div class="feature-card"><span>⚡</span><span>Real-time Response</span></div>
-                    <div class="feature-card"><span>💬</span><span>Multi-turn Chat</span></div>
+                    <div class="feature-card"><span>📁</span><span>File Operations</span></div>
+                    <div class="feature-card"><span>💻</span><span>Terminal Access</span></div>
+                    <div class="feature-card"><span>🌐</span><span>Web Browsing</span></div>
+                    <div class="feature-card"><span>🔧</span><span>Code Assistance</span></div>
                 </div>
             </div>
         </div>
@@ -386,15 +394,23 @@ body {
 </div>
 
 <script>
-// API Configuration - Using OpenAI Compatible API
-const API_BASE = 'https://app.all-hands.dev/v1';
+const API_BASE = 'https://app.all-hands.dev/api/v1';
 const API_KEY = 'sk-oh-e47580cG9TT0TFnXyIu4rNozgrI11pkP';
 
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
-const modelSelect = document.getElementById('modelSelect');
+const statusDot = document.getElementById('statusDot');
+const statusText = document.getElementById('statusText');
 
-let conversationHistory = [];
+let lastEventId = null;
+let currentConversationId = null;
+
+function setStatus(status, text) {
+    statusDot.className = 'status-dot';
+    if (status === 'starting') statusDot.classList.add('starting');
+    if (status === 'error') statusDot.classList.add('error');
+    statusText.textContent = text;
+}
 
 messageInput.addEventListener('input', function() {
     this.style.height = 'auto';
@@ -409,17 +425,19 @@ messageInput.addEventListener('keydown', function(e) {
 });
 
 function clearChat() {
-    conversationHistory = [];
+    lastEventId = null;
+    currentConversationId = null;
+    setStatus('ready', 'Ready');
     messagesContainer.innerHTML = `
         <div class="welcome" id="welcomeScreen">
-            <div class="welcome-icon">⚡</div>
-            <h2 class="welcome-title">Generalist Agent Engine</h2>
-            <p class="welcome-desc">High-speed AI assistant with multiple LLM engines. Select your preferred model above.</p>
+            <div class="welcome-icon">🤖</div>
+            <h2 class="welcome-title">Welcome to Generalist Agent</h2>
+            <p class="welcome-desc">Your versatile AI assistant for development and automation tasks.</p>
             <div class="feature-grid">
-                <div class="feature-card"><span>🚀</span><span>GPT-4o Engine</span></div>
-                <div class="feature-card"><span>🧠</span><span>Claude 4 Engine</span></div>
-                <div class="feature-card"><span>⚡</span><span>Real-time Response</span></div>
-                <div class="feature-card"><span>💬</span><span>Multi-turn Chat</span></div>
+                <div class="feature-card"><span>📁</span><span>File Operations</span></div>
+                <div class="feature-card"><span>💻</span><span>Terminal Access</span></div>
+                <div class="feature-card"><span>🌐</span><span>Web Browsing</span></div>
+                <div class="feature-card"><span>🔧</span><span>Code Assistance</span></div>
             </div>
         </div>
     `;
@@ -429,35 +447,33 @@ async function sendMessage() {
     const text = messageInput.value.trim();
     if (!text) return;
     
-    const selectedModel = modelSelect.value;
-    
     addMessage(text, 'user');
-    conversationHistory.push({ role: 'user', content: text });
     messageInput.value = '';
     messageInput.style.height = 'auto';
     showTyping();
+    setStatus('starting', 'Starting...');
     
     try {
-        await sendToAPI(selectedModel);
+        await startConversation(text);
     } catch (error) {
         hideTyping();
+        setStatus('error', 'Error');
         addMessage('Error: ' + error.message + ' 😕', 'bot');
+        setTimeout(() => setStatus('ready', 'Ready'), 3000);
     }
 }
 
-async function sendToAPI(model) {
-    const response = await fetch(API_BASE + '/chat/completions', {
+async function startConversation(initialMessage) {
+    const response = await fetch(API_BASE + '/app-conversations', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + API_KEY
         },
         body: JSON.stringify({
-            model: model,
-            messages: conversationHistory,
-            max_tokens: 4096,
-            temperature: 0.7,
-            stream: false
+            initial_message: {
+                content: [{ type: 'text', text: initialMessage }]
+            }
         })
     });
     
@@ -466,19 +482,205 @@ async function sendToAPI(model) {
     }
     
     const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    currentConversationId = data.app_conversation_id || data.id;
     
-    hideTyping();
-    conversationHistory.push({ role: 'assistant', content: assistantMessage });
-    addMessage(assistantMessage, 'bot');
+    if (!currentConversationId) {
+        throw new Error('No conversation ID returned');
+    }
+    
+    setStatus('starting', 'Processing...');
+    lastEventId = null;
+    await pollEvents(currentConversationId);
 }
+
+async function pollEvents(conversationId) {
+    let consecutiveEmpty = 0;
+    const maxEmpty = 3;
+    
+    while (true) {
+        try {
+            const response = await fetch(API_BASE + '/conversation/' + conversationId + '/events/search?limit=30', {
+                headers: { 'Authorization': 'Bearer ' + API_KEY }
+            });
+            
+            if (!response.ok) {
+                await sleep(30);
+                continue;
+            }
+            
+            const data = await response.json();
+            const items = data.items || [];
+            
+            if (items.length > 0) {
+                consecutiveEmpty = 0;
+                
+                for (const event of items) {
+                    processEvent(event);
+                    lastEventId = event.id;
+                }
+                
+                // Check completion
+                const lastItem = items[items.length - 1];
+                if (lastItem && (
+                    (lastItem.kind === 'ConversationStatusUpdateEvent' && lastItem.status === 'finished') ||
+                    (lastItem.kind === 'StatusUpdateEvent' && lastItem.value === 'finished') ||
+                    (lastItem.status === 'completed')
+                )) {
+                    hideTyping();
+                    setStatus('ready', 'Ready');
+                    return;
+                }
+            } else {
+                consecutiveEmpty++;
+                if (consecutiveEmpty > maxEmpty) {
+                    // Check if conversation is still running
+                    const statusResp = await fetch(API_BASE + '/app-conversations?ids=' + conversationId, {
+                        headers: { 'Authorization': 'Bearer ' + API_KEY }
+                    });
+                    if (statusResp.ok) {
+                        const statusData = await statusResp.json();
+                        const conv = statusData.items ? statusData.items[0] : statusData;
+                        if (conv && (conv.execution_status === 'finished' || conv.execution_status === 'completed')) {
+                            hideTyping();
+                            setStatus('ready', 'Ready');
+                            return;
+                        }
+                    }
+                }
+            }
+            
+        } catch (e) {
+            console.log('Poll error:', e);
+        }
+        
+        await sleep(30); // Ultra fast polling
+    }
+}
+
+let currentBotDiv = null;
+
+function processEvent(event) {
+    // Assistant message
+    if (event.kind === 'MessageEvent' && event.source === 'assistant') {
+        const msg = event.message || event.content || {};
+        let text = '';
+        if (typeof msg === 'string') text = msg;
+        else if (msg.content) {
+            text = typeof msg.content === 'string' 
+                ? msg.content 
+                : (msg.content.map ? msg.content.map(c => c.text || c.content || '').join('') : '');
+        }
+        
+        if (text && text.trim()) {
+            hideTyping();
+            // Stream text character by character for instant feel
+            streamText(cleanResponse(text));
+        }
+    }
+    
+    // Direct text content
+    if (event.content && typeof event.content === 'string' && event.source === 'assistant' && !currentBotDiv) {
+        hideTyping();
+        streamText(cleanResponse(event.content));
+    }
+    
+    // Tool action
+    if (event.kind === 'ActionEvent' && event.action) {
+        const action = event.action;
+        let desc = '';
+        if (action.tool_name) desc = '🔧 Using: ' + action.tool_name;
+        else if (action.command) desc = '💻 ' + action.command.substring(0, 50);
+        
+        if (desc && !currentBotDiv) {
+            hideTyping();
+            addMessage(desc, 'bot');
+            showTyping();
+        }
+    }
+    
+    // Error
+    if (event.kind === 'ErrorEvent') {
+        hideTyping();
+        setStatus('error', 'Error');
+        addMessage('⚠️ Error occurred', 'bot');
+    }
+}
+
+function streamText(text) {
+    const welcomeScreen = document.getElementById('welcomeScreen');
+    if (welcomeScreen) welcomeScreen.remove();
+    
+    const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+    
+    const div = document.createElement('div');
+    div.className = 'msg bot';
+    div.innerHTML = '<div class="msg-avatar">🤖</div><div class="msg-wrap"><div class="msg-bubble" id="streamBubble"></div><span class="msg-time">' + time + '</span></div>';
+    
+    messagesContainer.appendChild(div);
+    messagesContainer.scrollTop = messagesContainer.scrollHeight;
+    
+    currentBotDiv = div;
+    
+    // Fast text reveal
+    const bubble = document.getElementById('streamBubble');
+    let i = 0;
+    const speed = 5; // characters per interval
+    
+    function typeWriter() {
+        if (i < text.length) {
+            bubble.innerHTML = text.substring(0, i + 1);
+            i += speed;
+            messagesContainer.scrollTop = messagesContainer.scrollHeight;
+            setTimeout(typeWriter, 10);
+        } else {
+            bubble.innerHTML = text;
+            currentBotDiv = null;
+        }
+    }
+    
+    // If text is short, show immediately
+    if (text.length < 100) {
+        bubble.innerHTML = text;
+        currentBotDiv = null;
+    } else {
+        typeWriter();
+    }
+}
+
+const cleanResponse = (text) => {
+    if (!text) return '';
+    text = text.replace(/<start_of_thought>[\s\S]*?<end_of_thought>/gi, '');
+    text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+    text = convertMarkdown(text);
+    return text.trim();
+};
+
+const convertMarkdown = (text) => {
+    if (!text) return '';
+    let result = text;
+    result = result.replace(/^---$/gm, '');
+    result = result.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    result = result.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+    result = result.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+    result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    result = result.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
+    result = result.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+    result = result.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+    result = result.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+    result = result.replace(/\n\n/g, '<br><br>');
+    result = result.replace(/\n/g, '<br>');
+    return result;
+};
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 function addMessage(content, type) {
     const welcomeScreen = document.getElementById('welcomeScreen');
     if (welcomeScreen) welcomeScreen.remove();
     
     const time = new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
-    const avatarIcon = type === 'bot' ? '⚡' : '👤';
+    const avatarIcon = type === 'bot' ? '🤖' : '👤';
     const safeContent = type === 'bot' ? content : escapeHtml(content);
     
     const div = document.createElement('div');
@@ -494,7 +696,7 @@ function showTyping() {
     const div = document.createElement('div');
     div.id = 'typing';
     div.className = 'msg bot';
-    div.innerHTML = '<div class="msg-avatar">⚡</div><div class="msg-wrap"><div class="typing"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
+    div.innerHTML = '<div class="msg-avatar">🤖</div><div class="msg-wrap"><div class="typing"><div class="typing-dots"><span></span><span></span><span></span></div></div></div>';
     messagesContainer.appendChild(div);
     messagesContainer.scrollTop = messagesContainer.scrollHeight;
 }
@@ -508,7 +710,7 @@ const escapeHtml = (text) => {
 };
 
 document.addEventListener('DOMContentLoaded', () => {
-    console.log('=== Generalist Agent Engine initialized ===');
+    console.log('=== Generalist Agent initialized ===');
 });
 </script>
 </body>
