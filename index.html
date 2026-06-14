@@ -538,10 +538,10 @@ body {
 </div>
 
 <script>
-// API Configuration - Using environment defaults
+// API Configuration
 const API_BASE = 'https://app.all-hands.dev';
-const API_KEY = 'OPENHANDS_API_KEY'; // Will be injected by the environment
-const WORKSPACE_ID = 'default-workspace';
+const API_KEY = 'sk-oh-3CfBjsy7caZmVRRN2rDg125yL2GctTtW';
+const WORKSPACE_ID = 'generalist-workspace';
 
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
@@ -578,30 +578,27 @@ async function sendMessage() {
     const text = messageInput.value.trim();
     if (!text) return;
     
-    // Get API key from localStorage or use default
-    const storedApiKey = localStorage.getItem('api_key') || API_KEY;
-    
     addMessage(text, 'user');
     messageInput.value = '';
     messageInput.style.height = 'auto';
     showTyping();
     
     try {
-        await startConversation(text, storedApiKey);
+        await startConversation(text);
     } catch (error) {
         hideTyping();
         addMessage('Error: ' + error.message + ' 😕', 'bot');
     }
 }
 
-async function startConversation(initialMessage, apiKey) {
+async function startConversation(initialMessage) {
     const CONVERSATION_API = API_BASE + '/v1/conversation';
     
     const response = await fetch(CONVERSATION_API, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + apiKey
+            'Authorization': 'Bearer ' + API_KEY
         },
         body: JSON.stringify({
             agent_id: 'generalist',
@@ -614,10 +611,10 @@ async function startConversation(initialMessage, apiKey) {
     const data = await response.json();
     const conversationId = data.conversation_id;
     if (!conversationId) throw new Error('No conversation ID returned');
-    await pollForResponse(conversationId, apiKey);
+    await pollForResponse(conversationId);
 }
 
-async function pollForResponse(conversationId, apiKey) {
+async function pollForResponse(conversationId) {
     const EVENTS_API = API_BASE + '/v1/conversation/' + conversationId + '/events';
     let lastIndex = 0, pollCount = 0;
     const maxPolls = 200;
@@ -626,7 +623,7 @@ async function pollForResponse(conversationId, apiKey) {
     while (pollCount < maxPolls) {
         try {
             const response = await fetch(EVENTS_API + '?index=' + lastIndex, {
-                headers: { 'Authorization': 'Bearer ' + apiKey }
+                headers: { 'Authorization': 'Bearer ' + API_KEY }
             });
             
             if (!response.ok) {
@@ -790,7 +787,6 @@ const escapeHtml = (text) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('=== Generalist Agent initialized ===');
-    console.log('API_BASE:', API_BASE);
 });
 </script>
 </body>
