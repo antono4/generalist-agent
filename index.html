@@ -17,7 +17,6 @@
     --bg-hover: #252529;
     --accent: #8b5cf6;
     --accent-hover: #a78bfa;
-    --accent-muted: #7c3aed;
     --accent-glow: rgba(139, 92, 246, 0.25);
     --accent-subtle: rgba(139, 92, 246, 0.1);
     --text-primary: #fafafa;
@@ -29,7 +28,6 @@
     --radius-sm: 6px;
     --radius-md: 10px;
     --radius-lg: 14px;
-    --radius-xl: 18px;
 }
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -103,7 +101,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
-    max-width: 1200px;
+    max-width: 900px;
     width: 100%;
     margin: 0 auto;
     padding: 0 24px;
@@ -192,99 +190,22 @@ body {
 
 .icon-btn svg { width: 16px; height: 16px; }
 
-.main-content {
-    flex: 1;
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    gap: 20px;
-    padding: 20px 0;
-    min-height: 0;
-    overflow: hidden;
-}
-
-.side-panel {
-    background: var(--bg-secondary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-lg);
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-}
-
-.side-panel-header { padding: 18px; border-bottom: 1px solid var(--border); }
-
-.side-panel-title {
-    font-size: 0.65rem;
-    font-weight: 700;
-    text-transform: uppercase;
-    letter-spacing: 0.08em;
-    color: var(--text-muted);
-    margin-bottom: 14px;
-}
-
-.form-group { margin-bottom: 14px; }
-
-.form-label {
-    display: block;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: var(--text-secondary);
-    margin-bottom: 5px;
-}
-
-.form-input {
-    width: 100%;
-    padding: 9px 11px;
-    background: var(--bg-input);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    color: var(--text-primary);
-    font-size: 0.775rem;
-    font-family: 'Geist Mono', monospace;
-    transition: all 0.15s ease;
-}
-
-.form-input:focus {
-    outline: none;
-    border-color: var(--accent);
-    box-shadow: 0 0 0 3px var(--accent-subtle);
-}
-
-.form-input::placeholder { color: var(--text-muted); }
-
-.side-panel-footer {
-    margin-top: auto;
-    padding: 14px 18px;
-    border-top: 1px solid var(--border);
-    background: var(--bg-card);
-}
-
-.footer-row { display: flex; align-items: center; gap: 8px; }
-
-.version-tag {
-    padding: 3px 8px;
-    background: linear-gradient(135deg, var(--accent) 0%, #d946ef 100%);
-    border-radius: var(--radius-sm);
-    font-size: 0.6rem; font-weight: 700;
-    color: white;
-}
-
-.footer-label { font-size: 0.65rem; color: var(--text-muted); }
-
 .chat-panel {
+    flex: 1;
     background: var(--bg-secondary);
     border: 1px solid var(--border);
     border-radius: var(--radius-lg);
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    margin: 20px 0;
 }
 
 .chat-messages {
     flex: 1;
     min-height: 0;
     overflow-y: auto;
-    padding: 20px;
+    padding: 24px;
     display: flex;
     flex-direction: column;
     gap: 16px;
@@ -394,7 +315,7 @@ body {
 }
 
 .msg-wrap {
-    max-width: 70%;
+    max-width: 75%;
     display: flex;
     flex-direction: column;
     gap: 4px;
@@ -540,21 +461,16 @@ body {
     30% { transform: translateY(-5px); opacity: 1; }
 }
 
-@media (max-width: 860px) {
-    .main-content { grid-template-columns: 1fr; }
-    .side-panel { display: none; }
+@media (max-width: 600px) {
     .app-wrapper { padding: 0 16px; }
-    .msg-wrap { max-width: 85%; }
-    .feature-grid { grid-template-columns: 1fr; }
-}
-
-@media (max-width: 500px) {
     .top-bar { padding: 12px 0; }
     .brand-text span { display: none; }
     .status-pill span { display: none; }
     .chat-messages { padding: 16px; }
     .welcome { padding: 24px; }
     .welcome-title { font-size: 1.15rem; }
+    .msg-wrap { max-width: 88%; }
+    .feature-grid { grid-template-columns: 1fr; }
 }
 </style>
 </head>
@@ -579,7 +495,7 @@ body {
         <div class="top-bar-right">
             <div class="status-pill">
                 <div class="status-dot"></div>
-                <span>Connected</span>
+                <span>Ready</span>
             </div>
             <button class="icon-btn" title="Clear Chat" onclick="clearChat()">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -590,95 +506,50 @@ body {
         </div>
     </header>
 
-    <main class="main-content">
-        <aside class="side-panel">
-            <div class="side-panel-header">
-                <div class="side-panel-title">Configuration</div>
-                <div class="form-group">
-                    <label class="form-label">API Base URL</label>
-                    <input type="text" id="apiBase" class="form-input" placeholder="https://app.all-hands.dev">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">API Key</label>
-                    <input type="password" id="apiKey" class="form-input" placeholder="sk-...">
-                </div>
-                <div class="form-group">
-                    <label class="form-label">Workspace ID</label>
-                    <input type="text" id="workspaceId" class="form-input" placeholder="workspace-...">
-                </div>
-            </div>
-            <div class="side-panel-footer">
-                <div class="footer-row">
-                    <span class="version-tag">v1.0</span>
-                    <span class="footer-label">OpenHands</span>
-                </div>
-            </div>
-        </aside>
-
-        <div class="chat-panel">
-            <div id="messages" class="chat-messages">
-                <div class="welcome" id="welcomeScreen">
-                    <div class="welcome-icon">🤖</div>
-                    <h2 class="welcome-title">Welcome to Generalist Agent</h2>
-                    <p class="welcome-desc">Your versatile AI assistant for development and automation tasks.</p>
-                    <div class="feature-grid">
-                        <div class="feature-card"><span class="feature-icon">📁</span><span>File Operations</span></div>
-                        <div class="feature-card"><span class="feature-icon">💻</span><span>Terminal Access</span></div>
-                        <div class="feature-card"><span class="feature-icon">🌐</span><span>Web Browsing</span></div>
-                        <div class="feature-card"><span class="feature-icon">🔧</span><span>Code Assistance</span></div>
-                    </div>
-                </div>
-            </div>
-
-            <div class="chat-input-area">
-                <div class="chat-input-wrap">
-                    <div class="chat-input-box">
-                        <textarea id="messageInput" class="chat-input" placeholder="Ask me anything..." rows="1"></textarea>
-                    </div>
-                    <button class="send-btn" onclick="sendMessage()">
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <line x1="22" y1="2" x2="11" y2="13"></line>
-                            <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                        </svg>
-                    </button>
+    <div class="chat-panel">
+        <div id="messages" class="chat-messages">
+            <div class="welcome" id="welcomeScreen">
+                <div class="welcome-icon">🤖</div>
+                <h2 class="welcome-title">Welcome to Generalist Agent</h2>
+                <p class="welcome-desc">Your versatile AI assistant for development and automation tasks.</p>
+                <div class="feature-grid">
+                    <div class="feature-card"><span class="feature-icon">📁</span><span>File Operations</span></div>
+                    <div class="feature-card"><span class="feature-icon">💻</span><span>Terminal Access</span></div>
+                    <div class="feature-card"><span class="feature-icon">🌐</span><span>Web Browsing</span></div>
+                    <div class="feature-card"><span class="feature-icon">🔧</span><span>Code Assistance</span></div>
                 </div>
             </div>
         </div>
-    </main>
+
+        <div class="chat-input-area">
+            <div class="chat-input-wrap">
+                <div class="chat-input-box">
+                    <textarea id="messageInput" class="chat-input" placeholder="Ask me anything..." rows="1"></textarea>
+                </div>
+                <button class="send-btn" onclick="sendMessage()">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </div>
 </div>
 
 <script>
-let API_BASE = localStorage.getItem('api_base') || '';
-let API_KEY = localStorage.getItem('api_key') || '';
-let WORKSPACE_ID = localStorage.getItem('workspace_id') || '';
+// API Configuration - Using environment defaults
+const API_BASE = 'https://app.all-hands.dev';
+const API_KEY = 'OPENHANDS_API_KEY'; // Will be injected by the environment
+const WORKSPACE_ID = 'default-workspace';
 
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
-const apiBaseInput = document.getElementById('apiBase');
-const apiKeyInput = document.getElementById('apiKey');
-const workspaceIdInput = document.getElementById('workspaceId');
 
 messageInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 130) + 'px';
 });
-
-apiBaseInput.value = API_BASE;
-apiKeyInput.value = API_KEY;
-workspaceIdInput.value = WORKSPACE_ID;
-
-[apiBaseInput, apiKeyInput, workspaceIdInput].forEach(input => {
-    input.addEventListener('change', saveConfig);
-});
-
-function saveConfig() {
-    API_BASE = apiBaseInput.value.trim();
-    API_KEY = apiKeyInput.value.trim();
-    WORKSPACE_ID = workspaceIdInput.value.trim();
-    localStorage.setItem('api_base', API_BASE);
-    localStorage.setItem('api_key', API_KEY);
-    localStorage.setItem('workspace_id', WORKSPACE_ID);
-}
 
 messageInput.addEventListener('keydown', function(e) {
     if (e.key === 'Enter' && !e.shiftKey) {
@@ -707,15 +578,8 @@ async function sendMessage() {
     const text = messageInput.value.trim();
     if (!text) return;
     
-    API_BASE = apiBaseInput.value.trim() || API_BASE;
-    API_KEY = apiKeyInput.value.trim() || API_KEY;
-    WORKSPACE_ID = workspaceIdInput.value.trim() || WORKSPACE_ID;
-    saveConfig();
-    
-    if (!API_BASE || !API_KEY || !WORKSPACE_ID) {
-        addMessage('Please configure your API credentials in the sidebar first. ⚙️', 'bot');
-        return;
-    }
+    // Get API key from localStorage or use default
+    const storedApiKey = localStorage.getItem('api_key') || API_KEY;
     
     addMessage(text, 'user');
     messageInput.value = '';
@@ -723,21 +587,21 @@ async function sendMessage() {
     showTyping();
     
     try {
-        await startConversation(text);
+        await startConversation(text, storedApiKey);
     } catch (error) {
         hideTyping();
         addMessage('Error: ' + error.message + ' 😕', 'bot');
     }
 }
 
-async function startConversation(initialMessage) {
+async function startConversation(initialMessage, apiKey) {
     const CONVERSATION_API = API_BASE + '/v1/conversation';
     
     const response = await fetch(CONVERSATION_API, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + API_KEY
+            'Authorization': 'Bearer ' + apiKey
         },
         body: JSON.stringify({
             agent_id: 'generalist',
@@ -750,10 +614,10 @@ async function startConversation(initialMessage) {
     const data = await response.json();
     const conversationId = data.conversation_id;
     if (!conversationId) throw new Error('No conversation ID returned');
-    await pollForResponse(conversationId);
+    await pollForResponse(conversationId, apiKey);
 }
 
-async function pollForResponse(conversationId) {
+async function pollForResponse(conversationId, apiKey) {
     const EVENTS_API = API_BASE + '/v1/conversation/' + conversationId + '/events';
     let lastIndex = 0, pollCount = 0;
     const maxPolls = 200;
@@ -762,7 +626,7 @@ async function pollForResponse(conversationId) {
     while (pollCount < maxPolls) {
         try {
             const response = await fetch(EVENTS_API + '?index=' + lastIndex, {
-                headers: { 'Authorization': 'Bearer ' + API_KEY }
+                headers: { 'Authorization': 'Bearer ' + apiKey }
             });
             
             if (!response.ok) {
@@ -926,6 +790,7 @@ const escapeHtml = (text) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('=== Generalist Agent initialized ===');
+    console.log('API_BASE:', API_BASE);
 });
 </script>
 </body>
