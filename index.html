@@ -540,7 +540,7 @@ body {
 <script>
 // API Configuration
 const API_BASE = 'https://app.all-hands.dev';
-const API_KEY = 'sk-oh-3CfBjsy7caZmVRRN2rDg125yL2GctTtW';
+const API_KEY = 'sk-oh-e47580cG9TT0TFnXyIu4rNozgrI11pkP';
 
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
@@ -591,7 +591,8 @@ async function sendMessage() {
 }
 
 async function startConversation(initialMessage) {
-    const CONVERSATION_API = API_BASE + '/api/v1/conversation';
+    // Try v1/conversation endpoint
+    const CONVERSATION_API = API_BASE + '/v1/conversation';
     
     const response = await fetch(CONVERSATION_API, {
         method: 'POST',
@@ -613,7 +614,7 @@ async function startConversation(initialMessage) {
 }
 
 async function pollForResponse(conversationId) {
-    const EVENTS_API = API_BASE + '/api/v1/conversation/' + conversationId + '/events';
+    const EVENTS_API = API_BASE + '/v1/conversation/' + conversationId + '/events';
     let lastIndex = 0, pollCount = 0;
     const maxPolls = 200;
     let baseDelay = 500, maxDelay = 5000;
