@@ -619,6 +619,9 @@ body {
             <button class="btn-icon" onclick="exportChat()" title="Export Chat">
                 <i class="ri-download-line"></i>
             </button>
+            <button class="btn-icon" onclick="showSettings()" title="API Settings">
+                <i class="ri-settings-3-line"></i>
+            </button>
             <button class="btn-icon" onclick="clearChat()" title="Clear Chat">
                 <i class="ri-delete-bin-line"></i>
             </button>
@@ -666,8 +669,17 @@ body {
 </div>
 
 <script>
-const API_BASE = 'https://app.all-hands.dev/api/v1';
-const API_KEY = 'sk-oh-e47580cG9TT0TFnXyIu4rNozgrI11pkP';
+// API Configuration
+let API_MODE = localStorage.getItem('api_mode') || 'openhands'; // 'openhands' or 'custom'
+
+// OpenHands API (default)
+const OH_API_BASE = 'https://app.all-hands.dev/api/v1';
+const OH_API_KEY = 'sk-oh-e47580cG9TT0TFnXyIu4rNozgrI11pkP';
+
+// Custom LLM API (from free-llm-api-keys)
+let CUSTOM_API_BASE = localStorage.getItem('custom_api_base') || '';
+let CUSTOM_API_KEY = localStorage.getItem('custom_api_key') || '';
+let CUSTOM_MODEL = localStorage.getItem('custom_model') || 'gpt-5.5';
 
 const messagesContainer = document.getElementById('messages');
 const welcomeScreen = document.getElementById('welcome');
@@ -812,6 +824,115 @@ function showShortcuts() {
     document.body.appendChild(modal);
 }
 
+// Settings Modal
+function showSettings() {
+    const modal = document.createElement('div');
+    modal.className = 'modal-overlay';
+    modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+    
+    const isCustom = API_MODE === 'custom';
+    
+    modal.innerHTML = `
+        <div class="modal" style="max-width: 500px;">
+            <h3><i class="ri-settings-3-line"></i> API Settings</h3>
+            
+            <div style="margin: 16px 0;">
+                <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">API Mode</label>
+                <div style="display: flex; gap: 8px;">
+                    <button class="quick-btn ${!isCustom ? 'active' : ''}" onclick="setApiMode('openhands', this)" style="${!isCustom ? 'border-color: var(--accent); background: var(--bg-hover);' : ''}">
+                        <i class="ri-robot-line"></i> OpenHands
+                    </button>
+                    <button class="quick-btn ${isCustom ? 'active' : ''}" onclick="setApiMode('custom', this)" style="${isCustom ? 'border-color: var(--accent); background: var(--bg-hover);' : ''}">
+                        <i class="ri-links-line"></i> Custom LLM
+                    </button>
+                </div>
+            </div>
+            
+            <div id="customApiSettings" style="display: ${isCustom ? 'block' : 'none'};">
+                <div style="margin: 16px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">API Base URL</label>
+                    <input type="text" id="customApiBase" value="${CUSTOM_API_BASE}" placeholder="https://aiapiv2.pekpik.com/v1" 
+                        style="width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem;">
+                    <small style="color: var(--text-muted); font-size: 0.7rem; margin-top: 4px; display: block;">
+                        Free keys: <a href="https://github.com/alistaitsacle/free-llm-api-keys" target="_blank" style="color: var(--accent);">github.com/alistaitsacle/free-llm-api-keys</a>
+                    </small>
+                </div>
+                
+                <div style="margin: 16px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">API Key</label>
+                    <input type="password" id="customApiKey" value="${CUSTOM_API_KEY}" placeholder="sk-..." 
+                        style="width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+                
+                <div style="margin: 16px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">Model</label>
+                    <select id="customModel" style="width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem;">
+                        <option value="gpt-5.5" ${CUSTOM_MODEL === 'gpt-5.5' ? 'selected' : ''}>GPT-5.5</option>
+                        <option value="gpt-5.5-mini" ${CUSTOM_MODEL === 'gpt-5.5-mini' ? 'selected' : ''}>GPT-5.5 Mini</option>
+                        <option value="gpt-5.5-nano" ${CUSTOM_MODEL === 'gpt-5.5-nano' ? 'selected' : ''}>GPT-5.5 Nano</option>
+                        <option value="gpt-5.5-pro" ${CUSTOM_MODEL === 'gpt-5.5-pro' ? 'selected' : ''}>GPT-5.5 Pro</option>
+                        <option value="claude-opus-4-7" ${CUSTOM_MODEL === 'claude-opus-4-7' ? 'selected' : ''}>Claude Opus 4.7</option>
+                        <option value="claude-sonnet-4-6" ${CUSTOM_MODEL === 'claude-sonnet-4-6' ? 'selected' : ''}>Claude Sonnet 4.6</option>
+                        <option value="gemini-2.5-flash" ${CUSTOM_MODEL === 'gemini-2.5-flash' ? 'selected' : ''}>Gemini 2.5 Flash</option>
+                        <option value="deepseek-chat" ${CUSTOM_MODEL === 'deepseek-chat' ? 'selected' : ''}>DeepSeek Chat</option>
+                        <option value="grok-4.3" ${CUSTOM_MODEL === 'grok-4.3' ? 'selected' : ''}>Grok 4.3</option>
+                        <option value="smart-chat" ${CUSTOM_MODEL === 'smart-chat' ? 'selected' : ''}>Smart Chat (Auto-select)</option>
+                    </select>
+                </div>
+            </div>
+            
+            <div style="display: flex; gap: 8px; margin-top: 20px;">
+                <button onclick="saveSettings(); this.closest('.modal-overlay').remove();" 
+                    style="flex: 1; padding: 10px; background: var(--accent); color: white; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 500;">
+                    Save Settings
+                </button>
+                <button onclick="this.closest('.modal-overlay').remove();" 
+                    style="padding: 10px 16px; background: var(--bg-card); color: var(--text-secondary); border: 1px solid var(--border); border-radius: var(--radius-sm); cursor: pointer;">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    `;
+    document.body.appendChild(modal);
+}
+
+function setApiMode(mode, btn) {
+    API_MODE = mode;
+    localStorage.setItem('api_mode', mode);
+    
+    // Update button styles
+    document.querySelectorAll('.modal .quick-btn').forEach(b => {
+        b.style.borderColor = '';
+        b.style.background = '';
+    });
+    btn.style.borderColor = 'var(--accent)';
+    btn.style.background = 'var(--bg-hover)';
+    
+    // Show/hide custom settings
+    const settingsDiv = document.getElementById('customApiSettings');
+    if (settingsDiv) {
+        settingsDiv.style.display = mode === 'custom' ? 'block' : 'none';
+    }
+}
+
+function saveSettings() {
+    if (API_MODE === 'custom') {
+        CUSTOM_API_BASE = document.getElementById('customApiBase').value.trim();
+        CUSTOM_API_KEY = document.getElementById('customApiKey').value.trim();
+        CUSTOM_MODEL = document.getElementById('customModel').value;
+        
+        localStorage.setItem('custom_api_base', CUSTOM_API_BASE);
+        localStorage.setItem('custom_api_key', CUSTOM_API_KEY);
+        localStorage.setItem('custom_model', CUSTOM_MODEL);
+        
+        if (!CUSTOM_API_BASE || !CUSTOM_API_KEY) {
+            showToast('Please enter API Base URL and Key');
+            return;
+        }
+    }
+    showToast('Settings saved!');
+}
+
 // Global shortcuts
 document.addEventListener('keydown', (e) => {
     if (e.ctrlKey || e.metaKey) {
@@ -849,7 +970,11 @@ async function sendMessage() {
     setStatus('processing', 'Processing...');
     
     try {
-        await startConversation(text);
+        if (API_MODE === 'custom' && CUSTOM_API_BASE && CUSTOM_API_KEY) {
+            await sendToCustomLLM(text);
+        } else {
+            await startConversation(text);
+        }
     } catch (error) {
         hideTyping();
         setStatus('error', 'Error');
@@ -858,12 +983,42 @@ async function sendMessage() {
     }
 }
 
-async function startConversation(initialMessage) {
-    const response = await fetch(API_BASE + '/app-conversations', {
+// Custom LLM API (OpenAI-compatible)
+async function sendToCustomLLM(message) {
+    const response = await fetch(CUSTOM_API_BASE + '/chat/completions', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'Authorization': 'Bearer ' + API_KEY
+            'Authorization': 'Bearer ' + CUSTOM_API_KEY
+        },
+        body: JSON.stringify({
+            model: CUSTOM_MODEL,
+            messages: chatHistory
+        })
+    });
+    
+    if (!response.ok) {
+        const error = await response.json().catch(() => ({}));
+        throw new Error(error.error?.message || 'API request failed: ' + response.status);
+    }
+    
+    const data = await response.json();
+    const assistantMessage = data.choices[0]?.message?.content || '';
+    
+    hideTyping();
+    if (assistantMessage) {
+        addMessage(assistantMessage, 'bot');
+        chatHistory.push({ role: 'assistant', content: assistantMessage });
+    }
+    setStatus('ready', 'Ready');
+}
+
+async function startConversation(initialMessage) {
+    const response = await fetch(OH_API_BASE + '/app-conversations', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'Authorization': 'Bearer ' + OH_API_KEY
         },
         body: JSON.stringify({
             initial_message: { content: [{ type: 'text', text: initialMessage }] }
@@ -887,8 +1042,8 @@ async function pollEvents(convId) {
     
     while (true) {
         try {
-            const response = await fetch(API_BASE + '/conversation/' + convId + '/events/search?limit=50', {
-                headers: { 'Authorization': 'Bearer ' + API_KEY }
+            const response = await fetch(OH_API_BASE + '/conversation/' + convId + '/events/search?limit=50', {
+                headers: { 'Authorization': 'Bearer ' + OH_API_KEY }
             });
             
             if (!response.ok) { 
