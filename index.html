@@ -358,12 +358,11 @@ body {
 </div>
 
 <script>
-const API_BASE = 'https://app.all-hands.dev';
+const API_BASE = 'https://app.all-hands.dev/api/v1';
 const API_KEY = 'sk-oh-e47580cG9TT0TFnXyIu4rNozgrI11pkP';
 
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
-let conversationHistory = [];
 
 messageInput.addEventListener('input', function() {
     this.style.height = 'auto';
@@ -378,7 +377,6 @@ messageInput.addEventListener('keydown', function(e) {
 });
 
 function clearChat() {
-    conversationHistory = [];
     messagesContainer.innerHTML = `
         <div class="welcome" id="welcomeScreen">
             <div class="welcome-icon">🤖</div>
@@ -399,46 +397,156 @@ async function sendMessage() {
     if (!text) return;
     
     addMessage(text, 'user');
-    conversationHistory.push({ role: 'user', content: text });
     messageInput.value = '';
     messageInput.style.height = 'auto';
     showTyping();
     
     try {
-        await sendToAPI();
+        await startConversation(text);
     } catch (error) {
         hideTyping();
         addMessage('Error: ' + error.message + ' 😕', 'bot');
     }
 }
 
-async function sendToAPI() {
-    // Try OpenAI-compatible chat completions endpoint
-    const response = await fetch(API_BASE + '/v1/chat/completions', {
+async function startConversation(initialMessage) {
+    // Start new conversation using OpenHands Cloud API
+    const response = await fetch(API_BASE + '/app-conversations', {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'Authorization': 'Bearer ' + API_KEY
         },
         body: JSON.stringify({
-            model: 'generalist',
-            messages: conversationHistory,
-            max_tokens: 4000,
-            stream: false
+            initial_message: {
+                content: [{ type: 'text', text: initialMessage }]
+            }
         })
     });
     
     if (!response.ok) {
-        throw new Error('API request failed: ' + response.status);
+        const errorText = await response.text();
+        throw new Error('API request failed: ' + response.status + ' - ' + errorText);
     }
     
     const data = await response.json();
-    const assistantMessage = data.choices[0].message.content;
+    const conversationId = data.app_conversation_id || data.id;
+    
+    if (!conversationId) {
+        throw new Error('No conversation ID returned');
+    }
+    
+    await pollForResponse(conversationId);
+}
+
+async function pollForResponse(conversationId) {
+    let lastEventId = 0;
+    let pollCount = 0;
+    const maxPolls = 300;
+    let baseDelay = 1000;
+    const maxDelay = 5000;
+    
+    while (pollCount < maxPolls) {
+        try {
+            const response = await fetch(API_BASE + '/conversation/' + conversationId + '/events/search?limit=50', {
+                headers: { 'Authorization': 'Bearer ' + API_KEY }
+            });
+            
+            if (!response.ok) {
+                await sleep(baseDelay);
+                pollCount++;
+                baseDelay = Math.min(baseDelay * 1.1, maxDelay);
+                continue;
+            }
+            
+            const data = await response.json();
+            const items = data.items || [];
+            
+            // Process new events
+            for (const event of items) {
+                if (event.id === lastEventId) continue;
+                
+                // Look for MessageEvent from assistant
+                if (event.kind === 'MessageEvent' && event.source === 'assistant') {
+                    const msg = event.message || event.content || event;
+                    let text = '';
+                    if (typeof msg === 'string') text = msg;
+                    else if (msg.content) text = Array.isArray(msg.content) ? msg.content.map(c => c.text || c.content || '').join('') : msg.content;
+                    
+                    if (text && text.trim()) {
+                        hideTyping();
+                        addMessage(cleanResponse(text), 'bot');
+                    }
+                }
+                
+                // Handle text content directly
+                if (event.content && typeof event.content === 'string' && event.source === 'assistant') {
+                    hideTyping();
+                    addMessage(cleanResponse(event.content), 'bot');
+                }
+                
+                // Check for completion
+                if (event.kind === 'ConversationStatusUpdateEvent' || event.kind === 'StatusUpdateEvent') {
+                    if (event.status === 'finished' || event.status === 'completed' || event.value === 'finished') {
+                        return;
+                    }
+                }
+                
+                lastEventId = event.id;
+            }
+            
+            // Check conversation status
+            const statusResp = await fetch(API_BASE + '/app-conversations?ids=' + conversationId, {
+                headers: { 'Authorization': 'Bearer ' + API_KEY }
+            });
+            
+            if (statusResp.ok) {
+                const statusData = await statusResp.json();
+                const conv = statusData.items ? statusData.items[0] : statusData;
+                if (conv && (conv.execution_status === 'finished' || conv.execution_status === 'completed')) {
+                    return;
+                }
+            }
+            
+        } catch (e) {
+            console.log('Poll error:', e);
+        }
+        
+        pollCount++;
+        await sleep(baseDelay);
+    }
     
     hideTyping();
-    conversationHistory.push({ role: 'assistant', content: assistantMessage });
-    addMessage(assistantMessage, 'bot');
+    addMessage('Request timed out. Please try again. ⏰', 'bot');
 }
+
+const cleanResponse = (text) => {
+    if (!text) return '';
+    text = text.replace(/<start_of_thought>[\s\S]*?<end_of_thought>/gi, '');
+    text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
+    text = convertMarkdown(text);
+    return text.trim();
+};
+
+const convertMarkdown = (text) => {
+    if (!text) return '';
+    let result = text;
+    result = result.replace(/^---$/gm, '');
+    result = result.replace(/^### (.+)$/gm, '<h4>$1</h4>');
+    result = result.replace(/^## (.+)$/gm, '<h3>$1</h3>');
+    result = result.replace(/^# (.+)$/gm, '<h2>$1</h2>');
+    result = result.replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+    result = result.replace(/\*(.+?)\*/g, '<em>$1</em>');
+    result = result.replace(/`([^`]+)`/g, '<code>$1</code>');
+    result = result.replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>');
+    result = result.replace(/^[\-\*] (.+)$/gm, '<li>$1</li>');
+    result = result.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+    result = result.replace(/\n\n/g, '<br><br>');
+    result = result.replace(/\n/g, '<br>');
+    return result;
+};
+
+const sleep = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 
 function addMessage(content, type) {
     const welcomeScreen = document.getElementById('welcomeScreen');
@@ -476,6 +584,7 @@ const escapeHtml = (text) => {
 
 document.addEventListener('DOMContentLoaded', () => {
     console.log('=== Generalist Agent initialized ===');
+    console.log('API_BASE:', API_BASE);
 });
 </script>
 </body>
