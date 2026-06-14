@@ -284,35 +284,77 @@ body {
 .quick-actions {
     display: flex;
     flex-wrap: wrap;
-    gap: 12px;
+    gap: 14px;
     justify-content: center;
-    max-width: 600px;
+    max-width: 650px;
 }
 
 .quick-btn {
     display: flex;
+    flex-direction: column;
     align-items: center;
-    gap: 10px;
-    padding: 14px 20px;
+    gap: 6px;
+    padding: 18px 24px;
     background: var(--bg-card);
     border: 1px solid var(--border);
-    border-radius: 14px;
+    border-radius: 16px;
     color: var(--text-secondary);
-    font-size: 0.85rem;
-    font-weight: 500;
     cursor: pointer;
     transition: all 0.25s ease;
+    min-width: 140px;
+    text-align: center;
 }
 
 .quick-btn:hover {
     background: var(--bg-hover);
     border-color: var(--accent);
     color: var(--text-primary);
-    transform: translateY(-2px);
-    box-shadow: 0 4px 15px rgba(139, 92, 246, 0.2);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 25px rgba(139, 92, 246, 0.2);
 }
 
-.quick-btn i { font-size: 18px; }
+.quick-btn i { 
+    font-size: 24px;
+    color: var(--accent);
+    transition: transform 0.2s ease;
+}
+
+.quick-btn:hover i {
+    transform: scale(1.1);
+}
+
+.quick-btn span {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+
+.quick-btn small {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+}
+
+.quick-btn:hover small {
+    color: var(--text-secondary);
+}
+
+/* Welcome Tips */
+.welcome-tips {
+    margin-top: 32px;
+    padding: 12px 20px;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+}
+
+.welcome-tips kbd {
+    padding: 3px 8px;
+    background: var(--bg-primary);
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    font-size: 0.75rem;
+}
 
 /* Message */
 .message {
@@ -673,9 +715,20 @@ body {
     .app { padding: 0 12px; }
     .bubble-wrap { max-width: 90%; }
     .welcome h2 { font-size: 1.25rem; }
-    .quick-actions { flex-direction: column; }
-    .quick-btn { width: 100%; justify-content: center; }
+    .quick-actions { flex-direction: column; gap: 10px; }
+    .quick-btn { 
+        width: 100%; 
+        flex-direction: row;
+        justify-content: flex-start;
+        padding: 14px 18px;
+        text-align: left;
+        gap: 14px;
+    }
+    .quick-btn i { font-size: 22px; margin-right: 4px; }
+    .quick-btn span { flex: 1; }
+    .quick-btn small { display: none; }
     .status-text { display: none; }
+    .welcome-tips { display: none; }
 }
 </style>
 </head>
@@ -724,22 +777,39 @@ body {
                 <h2>Welcome to Generalist Agent</h2>
                 <p>Your versatile AI assistant for development, automation, and more.</p>
                 <div class="quick-actions">
-                    <button class="quick-btn" onclick="quickAction('Write a Python script to...')">
+                    <button class="quick-btn" onclick="quickAction('Create a Python script that:')">
                         <i class="ri-code-line"></i>
-                        Write Code
+                        <span>Write Code</span>
+                        <small>Python, JS, Go, etc.</small>
                     </button>
-                    <button class="quick-btn" onclick="quickAction('Debug this error and explain:')">
+                    <button class="quick-btn" onclick="quickAction('Help me debug this error:\n\n')">
                         <i class="ri-bug-line"></i>
-                        Debug Error
+                        <span>Debug Error</span>
+                        <small>Paste your error here</small>
                     </button>
-                    <button class="quick-btn" onclick="quickAction('Research the latest trends in:')">
+                    <button class="quick-btn" onclick="quickAction('Research and summarize:')">
                         <i class="ri-search-line"></i>
-                        Research
+                        <span>Research</span>
+                        <small>Find latest info</small>
                     </button>
-                    <button class="quick-btn" onclick="quickAction('Create a landing page with:')">
+                    <button class="quick-btn" onclick="quickAction('Create a modern landing page with:\n\n- Hero section\n- Features\n- Pricing\n- Footer')">
                         <i class="ri-layout-line"></i>
-                        Create UI
+                        <span>Create UI</span>
+                        <small>HTML/CSS/React</small>
                     </button>
+                    <button class="quick-btn" onclick="quickAction('Explain this concept:')">
+                        <i class="ri-book-open-line"></i>
+                        <span>Explain</span>
+                        <small>Learn anything</small>
+                    </button>
+                    <button class="quick-btn" onclick="quickAction('Optimize this code for better performance:\n\n')">
+                        <i class="ri-speed-line"></i>
+                        <span>Optimize</span>
+                        <small>Speed up code</small>
+                    </button>
+                </div>
+                <div class="welcome-tips">
+                    <span>💡 Tip: Press <kbd>Ctrl</kbd>+<kbd>T</kbd> to toggle dark/light theme</span>
                 </div>
             </div>
         </div>
