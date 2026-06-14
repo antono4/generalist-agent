@@ -443,8 +443,8 @@ async function pollForResponse(conversationId) {
     let lastEventId = 0;
     let pollCount = 0;
     const maxPolls = 300;
-    let baseDelay = 1000;
-    const maxDelay = 5000;
+    let baseDelay = 100;
+    const maxDelay = 1000;
     
     while (pollCount < maxPolls) {
         try {
