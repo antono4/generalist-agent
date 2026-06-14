@@ -881,16 +881,32 @@ async function startConversation(initialMessage) {
 }
 
 async function pollEvents(convId) {
+    let consecutiveEmptyPolls = 0;
+    const baseDelay = 10; // Start with 10ms polling
+    
     while (true) {
         try {
-            const response = await fetch(API_BASE + '/conversation/' + convId + '/events/search?limit=30', {
+            const response = await fetch(API_BASE + '/conversation/' + convId + '/events/search?limit=50', {
                 headers: { 'Authorization': 'Bearer ' + API_KEY }
             });
             
-            if (!response.ok) { await sleep(30); continue; }
+            if (!response.ok) { 
+                await sleep(baseDelay * 2); 
+                consecutiveEmptyPolls = 0;
+                continue; 
+            }
             
             const data = await response.json();
             const items = data.items || [];
+            
+            // Adaptive polling: slow down if no new events
+            if (items.length === 0) {
+                consecutiveEmptyPolls++;
+                await sleep(baseDelay + (consecutiveEmptyPolls * 5)); // Gradually slow down
+                continue;
+            }
+            
+            consecutiveEmptyPolls = 0;
             
             for (const event of items) {
                 if (event.id === lastEventId) continue;
@@ -906,8 +922,13 @@ async function pollEvents(convId) {
                 return;
             }
             
-        } catch (e) { console.log('Poll error:', e); }
-        await sleep(30);
+            // Fast polling when active
+            await sleep(baseDelay);
+            
+        } catch (e) { 
+            console.log('Poll error:', e); 
+            await sleep(baseDelay * 3);
+        }
     }
 }
 
@@ -923,17 +944,15 @@ function processEvent(event) {
             const cleaned = cleanResponse(text);
             chatHistory.push({ role: 'assistant', content: cleaned });
             addMessage(cleaned, 'bot');
-            showTyping();
         }
     }
     
-    // Tool action
+    // Tool action - batch these to reduce DOM updates
     if (event.kind === 'ActionEvent' && event.action) {
         const action = event.action;
         if (action.tool_name) {
             hideTyping();
             addMessage('🔧 Using: ' + action.tool_name, 'bot');
-            showTyping();
         }
     }
 }
