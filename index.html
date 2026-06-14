@@ -541,7 +541,6 @@ body {
 // API Configuration
 const API_BASE = 'https://app.all-hands.dev';
 const API_KEY = 'sk-oh-3CfBjsy7caZmVRRN2rDg125yL2GctTtW';
-const WORKSPACE_ID = 'generalist-workspace';
 
 const messagesContainer = document.getElementById('messages');
 const messageInput = document.getElementById('messageInput');
@@ -592,7 +591,7 @@ async function sendMessage() {
 }
 
 async function startConversation(initialMessage) {
-    const CONVERSATION_API = API_BASE + '/v1/conversation';
+    const CONVERSATION_API = API_BASE + '/api/v1/conversation';
     
     const response = await fetch(CONVERSATION_API, {
         method: 'POST',
@@ -602,7 +601,6 @@ async function startConversation(initialMessage) {
         },
         body: JSON.stringify({
             agent_id: 'generalist',
-            workspace_id: WORKSPACE_ID,
             initial_message: initialMessage
         })
     });
@@ -615,7 +613,7 @@ async function startConversation(initialMessage) {
 }
 
 async function pollForResponse(conversationId) {
-    const EVENTS_API = API_BASE + '/v1/conversation/' + conversationId + '/events';
+    const EVENTS_API = API_BASE + '/api/v1/conversation/' + conversationId + '/events';
     let lastIndex = 0, pollCount = 0;
     const maxPolls = 200;
     let baseDelay = 500, maxDelay = 5000;
