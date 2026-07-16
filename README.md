@@ -1,5 +1,8 @@
 # 🤖 Generalist Agent
 
+> **Created by Antono**
+
+
 <div align="center">
 
 ![License](https://img.shields.io/badge/License-MIT-blue.svg)
