@@ -835,9 +835,16 @@ body {
 // API Configuration
 let API_MODE = localStorage.getItem('api_mode') || 'openhands'; // 'openhands' or 'custom'
 
-// OpenHands API (default)
-const OH_API_BASE = 'https://app.all-hands.dev/api/v1';
-const OH_API_KEY = 'sk-oh-e47580cG9TT0TFnXyIu4rNozgrI11pkP';
+// OpenHands API (default).
+// The API key is never hardcoded in this file: set it in the Settings dialog,
+// or pass it once with ?api_key=... . A committed key would eventually expire
+// (returning HTTP 401) and cannot be rotated without a new deploy.
+const OH_PARAMS = new URLSearchParams(location.search);
+let OH_API_BASE = OH_PARAMS.get('oh_api_base') || localStorage.getItem('oh_api_base') || 'https://app.all-hands.dev/api/v1';
+const OH_URL_KEY = OH_PARAMS.get('api_key');
+let OH_API_KEY = OH_URL_KEY || localStorage.getItem('oh_api_key') || '';
+if (OH_URL_KEY) localStorage.setItem('oh_api_key', OH_URL_KEY);
+if (OH_PARAMS.get('oh_api_base')) localStorage.setItem('oh_api_base', OH_API_BASE);
 
 // Custom LLM API (from free-llm-api-keys)
 let CUSTOM_API_BASE = localStorage.getItem('custom_api_base') || '';
@@ -904,9 +911,9 @@ function quickAction(text) {
 // Status
 function setStatus(status, text) {
     statusDot.className = 'status-dot';
+    statusDot.style.background = '';
     if (status === 'processing') statusDot.classList.add('processing');
-    if (status === 'error') statusDot.style.background = 'var(--error)';
-    else statusDot.style.background = '';
+    else if (status === 'error') statusDot.style.background = 'var(--error)';
     statusText.textContent = text;
 }
 
@@ -1023,6 +1030,23 @@ function showSettings() {
                 </div>
             </div>
             
+            <div id="openhandsApiSettings" style="display: ${isCustom ? 'none' : 'block'};">
+                <div style="margin: 16px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">OpenHands API Key</label>
+                    <input type="password" id="ohApiKey" value="${OH_API_KEY}" placeholder="sk-oh-..."
+                        style="width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem;">
+                    <small style="color: var(--text-muted); font-size: 0.7rem; margin-top: 4px; display: block;">
+                        Get a key at <a href="https://app.all-hands.dev/settings/api-keys" target="_blank" style="color: var(--accent);">app.all-hands.dev/settings/api-keys</a>.
+                        Stored only in this browser, never committed to the repo.
+                    </small>
+                </div>
+                <div style="margin: 16px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">API Base URL</label>
+                    <input type="text" id="ohApiBase" value="${OH_API_BASE}" placeholder="https://app.all-hands.dev/api/v1"
+                        style="width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem;">
+                </div>
+            </div>
+
             <div id="customApiSettings" style="display: ${isCustom ? 'block' : 'none'};">
                 <div style="margin: 16px 0;">
                     <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">API Base URL</label>
@@ -1083,11 +1107,11 @@ function setApiMode(mode, btn) {
     btn.style.borderColor = 'var(--accent)';
     btn.style.background = 'var(--bg-hover)';
     
-    // Show/hide custom settings
-    const settingsDiv = document.getElementById('customApiSettings');
-    if (settingsDiv) {
-        settingsDiv.style.display = mode === 'custom' ? 'block' : 'none';
-    }
+    // Show/hide the settings panel for the active mode
+    const customDiv = document.getElementById('customApiSettings');
+    const ohDiv = document.getElementById('openhandsApiSettings');
+    if (customDiv) customDiv.style.display = mode === 'custom' ? 'block' : 'none';
+    if (ohDiv) ohDiv.style.display = mode === 'custom' ? 'none' : 'block';
 }
 
 function saveSettings() {
@@ -1095,31 +1119,58 @@ function saveSettings() {
         CUSTOM_API_BASE = document.getElementById('customApiBase').value.trim();
         CUSTOM_API_KEY = document.getElementById('customApiKey').value.trim();
         CUSTOM_MODEL = document.getElementById('customModel').value;
-        
+
         localStorage.setItem('custom_api_base', CUSTOM_API_BASE);
         localStorage.setItem('custom_api_key', CUSTOM_API_KEY);
         localStorage.setItem('custom_model', CUSTOM_MODEL);
-        
+
         if (!CUSTOM_API_BASE || !CUSTOM_API_KEY) {
             showToast('Please enter API Base URL and Key');
             return;
         }
-        
-        // Test the connection
+
         testApiConnection(CUSTOM_API_BASE, CUSTOM_API_KEY, CUSTOM_MODEL);
-        
-        // Close modal after 1 second if test succeeds
+
         setTimeout(() => {
             const modal = document.querySelector('.modal-overlay');
             if (modal) modal.remove();
         }, 2000);
     } else {
+        const keyInput = document.getElementById('ohApiKey');
+        const baseInput = document.getElementById('ohApiBase');
+        OH_API_KEY = keyInput ? keyInput.value.trim() : OH_API_KEY;
+        OH_API_BASE = (baseInput && baseInput.value.trim()) || 'https://app.all-hands.dev/api/v1';
+
+        localStorage.setItem('oh_api_key', OH_API_KEY);
+        localStorage.setItem('oh_api_base', OH_API_BASE);
         localStorage.setItem('api_mode', 'openhands');
-        showToast('Settings saved! Using OpenHands API');
+
+        if (!OH_API_KEY) {
+            showToast('Please enter your OpenHands API key');
+            return;
+        }
+
+        testOpenHandsConnection();
+
         const modal = document.querySelector('.modal-overlay');
         if (modal) modal.remove();
     }
 }
+
+async function testOpenHandsConnection() {
+    showToast('Testing connection...');
+    try {
+        const res = await fetch(OH_API_BASE + '/users/me', {
+            headers: { 'Authorization': 'Bearer ' + OH_API_KEY }
+        });
+        if (res.ok) showToast('\u2705 OpenHands connection successful!');
+        else if (res.status === 401) showToast('\u274c Invalid or expired API key');
+        else showToast('\u274c Connection failed: HTTP ' + res.status);
+    } catch (e) {
+        showToast('\u274c Connection failed: ' + e.message);
+    }
+}
+
 
 async function testApiConnection(baseUrl, apiKey, model) {
     showToast('Testing connection...');
@@ -1185,6 +1236,18 @@ async function sendMessage() {
     const text = messageInput.value.trim();
     if (!text) return;
     
+    // Fail fast with an actionable message instead of a raw 401 from the API.
+    if (API_MODE === 'custom' && (!CUSTOM_API_BASE || !CUSTOM_API_KEY)) {
+        showSettings();
+        showToast('Set your Custom LLM base URL and API key first');
+        return;
+    }
+    if (API_MODE !== 'custom' && !OH_API_KEY) {
+        showSettings();
+        showToast('Add your OpenHands API key to start chatting');
+        return;
+    }
+
     // Disable send while processing
     const sendBtn = document.querySelector('.send-btn');
     const textarea = document.getElementById('messageInput');
@@ -1306,96 +1369,134 @@ async function startConversation(initialMessage) {
             initial_message: { content: [{ type: 'text', text: initialMessage }] }
         })
     });
-    
-    if (!response.ok) throw new Error('API request failed: ' + response.status);
-    
+
+    if (!response.ok) {
+        if (response.status === 401) throw new Error('OpenHands API key is missing or invalid (HTTP 401). Open Settings and add a valid key.');
+        throw new Error('API request failed: ' + response.status);
+    }
+
     const data = await response.json();
-    conversationId = data.app_conversation_id || data.id;
-    if (!conversationId) throw new Error('No conversation ID');
-    
+
+    // POST /app-conversations is asynchronous: it returns a start-task whose
+    // `id` is NOT the conversation id. Resolve the real app_conversation_id
+    // before reading events.
+    conversationId = data.app_conversation_id || null;
+    if (!conversationId && data.id) {
+        setStatus('processing', 'Starting sandbox...');
+        conversationId = await waitForConversation(data.id);
+    }
+    if (!conversationId) throw new Error('Could not resolve conversation id');
+
     lastEventId = null;
     await pollEvents(conversationId);
 }
 
+// Poll the start-task until the sandbox is ready and expose the real id.
+async function waitForConversation(startTaskId) {
+    for (let i = 0; i < 90; i++) { // ~3 minutes max
+        await sleep(2000);
+        const res = await fetch(OH_API_BASE + '/app-conversations/start-tasks?ids=' + encodeURIComponent(startTaskId), {
+            headers: { 'Authorization': 'Bearer ' + OH_API_KEY }
+        });
+        if (!res.ok) continue;
+
+        const body = await res.json();
+        const task = Array.isArray(body) ? body[0] : (body.items || [])[0];
+        if (!task) continue;
+
+        if (task.status === 'READY' && task.app_conversation_id) return task.app_conversation_id;
+        if (task.status === 'ERROR' || task.status === 'FAILED') {
+            throw new Error('Sandbox failed to start: ' + (task.detail || task.status));
+        }
+    }
+    throw new Error('Timed out waiting for the sandbox to start');
+}
+
 async function pollEvents(convId) {
+    const seen = new Set();
     let consecutiveEmptyPolls = 0;
     // API rate limit: 100 requests per minute = 600ms minimum between requests
-    const baseDelay = 600; // Safe interval for rate limit compliance
-    
+    const baseDelay = 600;
+
     while (true) {
         try {
-            const response = await fetch(OH_API_BASE + '/conversation/' + convId + '/events/search?limit=50', {
+            const response = await fetch(OH_API_BASE + '/conversation/' + convId + '/events/search?limit=100', {
                 headers: { 'Authorization': 'Bearer ' + OH_API_KEY }
             });
-            
-            if (!response.ok) { 
-                await sleep(baseDelay); 
+
+            if (!response.ok) {
+                await sleep(baseDelay);
                 consecutiveEmptyPolls = 0;
-                continue; 
-            }
-            
-            const data = await response.json();
-            const items = data.items || [];
-            
-            // Adaptive polling: slow down if no new events
-            if (items.length === 0) {
-                consecutiveEmptyPolls++;
-                await sleep(baseDelay + (consecutiveEmptyPolls * 100)); // Gradually slow down
                 continue;
             }
-            
+
+            const data = await response.json();
+            const items = data.items || [];
+
+            if (items.length === 0) {
+                consecutiveEmptyPolls++;
+                await sleep(baseDelay + (consecutiveEmptyPolls * 100));
+                continue;
+            }
+
             consecutiveEmptyPolls = 0;
-            
+
             for (const event of items) {
-                if (event.id === lastEventId) continue;
-                processEvent(event);
+                // Dedup by event id (ids are UUIDs, not monotonic counters).
+                if (seen.has(event.id)) continue;
+                seen.add(event.id);
                 lastEventId = event.id;
+                processEvent(event);
+                if (isFinished(event)) {
+                    hideTyping();
+                    setStatus('ready', 'Ready');
+                    return;
+                }
             }
-            
-            // Check completion
-            const last = items[items.length - 1];
-            if (last && (last.status === 'finished' || last.value === 'finished' || last.status === 'completed')) {
-                hideTyping();
-                setStatus('ready', 'Ready');
-                return;
-            }
-            
-            // Polling with slight speedup when active (but still under rate limit)
-            await sleep(baseDelay - 100); // 500ms when actively receiving events
-            
-        } catch (e) { 
-            console.log('Poll error:', e); 
-            await sleep(baseDelay * 2); // Back off on errors
+
+            await sleep(baseDelay - 100); // 500ms while actively receiving events
+
+        } catch (e) {
+            console.log('Poll error:', e);
+            await sleep(baseDelay * 2);
         }
     }
 }
 
+// Completion is signalled by a ConversationStateUpdateEvent, not by the last
+// event in the batch.
+function isFinished(event) {
+    return event.kind === 'ConversationStateUpdateEvent' &&
+        event.key === 'execution_status' &&
+        (event.value === 'finished' || event.value === 'failed' || event.value === 'error');
+}
+
 function processEvent(event) {
-    // Message event
-    if (event.kind === 'MessageEvent' && event.source === 'assistant') {
-        const msg = event.message || event.content || {};
+    // Assistant chat message. The API uses source "agent" (older builds: "assistant").
+    if (event.kind === 'MessageEvent' && (event.source === 'agent' || event.source === 'assistant')) {
+        const msg = event.message || event.llm_message || {};
         let text = typeof msg === 'string' ? msg : (msg.content || '');
-        if (typeof text !== 'string') text = Array.isArray(text) ? text.map(c => c.text || c.content || '').join('') : '';
-        
+        if (Array.isArray(text)) text = text.map(c => c.text || c.content || '').join('');
+
         if (text && text.trim()) {
             hideTyping();
             const cleaned = cleanResponse(text);
-            chatHistory.push({ role: 'assistant', content: cleaned });
-            addMessage(cleaned, 'bot');
+            if (cleaned) {
+                chatHistory.push({ role: 'assistant', content: cleaned });
+                addMessage(cleaned, 'bot');
+            }
         }
     }
-    
-    // Tool action - batch these to reduce DOM updates
-    if (event.kind === 'ActionEvent' && event.action) {
-        const action = event.action;
-        if (action.tool_name) {
-            hideTyping();
-            addMessage('🔧 Using: ' + action.tool_name, 'bot');
-        }
+
+    // Tool action: the tool name lives on the event, not inside action.
+    if (event.kind === 'ActionEvent' && event.tool_name) {
+        hideTyping();
+        addMessage('🔧 Using: ' + event.tool_name, 'bot');
     }
 }
 
 function cleanResponse(text) {
+    if (!text) return '';
     text = text.replace(/<start_of_thought>[\s\S]*?<end_of_thought>/gi, '');
     text = text.replace(/<thought>[\s\S]*?<\/thought>/gi, '');
     return text.trim();
