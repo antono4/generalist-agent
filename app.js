@@ -30,19 +30,8 @@ const DIRECT_MODEL_MAP = {
 const FREE_MODEL_KEY = 'free_model';
 let FREE_MODEL = localStorage.getItem(FREE_MODEL_KEY) || 'semua';
 
-// ---------- Mode API ----------
-let API_MODE = localStorage.getItem('api_mode') || 'free'; // 'free' | 'openhands' | 'custom'
-
-const OH_PARAMS = new URLSearchParams(location.search);
-let OH_API_BASE = OH_PARAMS.get('oh_api_base') || localStorage.getItem('oh_api_base') || 'https://app.all-hands.dev/api/v1';
-const OH_URL_KEY = OH_PARAMS.get('api_key');
-let OH_API_KEY = OH_URL_KEY || localStorage.getItem('oh_api_key') || '';
-if (OH_URL_KEY) localStorage.setItem('oh_api_key', OH_URL_KEY);
-if (OH_PARAMS.get('oh_api_base')) localStorage.setItem('oh_api_base', OH_API_BASE);
-
-let CUSTOM_API_BASE = localStorage.getItem('custom_api_base') || '';
-let CUSTOM_API_KEY = localStorage.getItem('custom_api_key') || '';
-let CUSTOM_MODEL = localStorage.getItem('custom_model') || 'gpt-5.5';
+// Aplikasi ini hanya memakai model gratis (tanpa API key). Tidak ada mode
+// OpenHands/Custom yang memerlukan kredensial.
 
 // ---------- Elemen DOM ----------
 const layoutEl = document.querySelector('.layout');
@@ -188,8 +177,6 @@ function createAssistantMessage() {
   body.className = 'body';
   const inner = document.createElement('div');
   inner.className = 'inner';
-  const tools = document.createElement('div');
-  tools.className = 'tools';
   const actions = document.createElement('div');
   actions.className = 'm-actions';
   actions.style.display = 'none';
@@ -206,14 +193,13 @@ function createAssistantMessage() {
   actions.appendChild(regenBtn);
 
   body.appendChild(inner);
-  body.appendChild(tools);
   body.appendChild(actions);
   wrap.appendChild(tag);
   wrap.appendChild(body);
   messagesEl.appendChild(wrap);
   scrollDown();
 
-  return { wrap, tag, body, inner, tools, actions, copyBtn, regenBtn };
+  return { wrap, tag, body, inner, actions, copyBtn, regenBtn };
 }
 
 const typingHtml = () => '<span class="typing"><span></span><span></span><span></span></span>';
@@ -230,14 +216,6 @@ function copyToClipboard(text, btn) {
   } else {
     done();
   }
-}
-
-function addToolLine(toolsEl, name) {
-  const line = document.createElement('div');
-  line.className = 'tool-line';
-  line.innerHTML = '<i class="ri-tools-line"></i>' + escHtml(name);
-  toolsEl.appendChild(line);
-  scrollDown();
 }
 
 // ---------- Model gratis: pemanggilan langsung (tanpa backend/API key) ----------
@@ -341,118 +319,8 @@ async function freeAnswer(msgs, model, onChunk) {
   return { content: cleaned, modelId: result.modelId };
 }
 
-// ---------- Custom LLM (OpenAI-compatible) ----------
-async function customAnswer(msgs, onChunk) {
-  const base = CUSTOM_API_BASE.replace(/\/$/, '');
-  const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 60000);
-  try {
-    const response = await fetch(base + '/chat/completions', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + CUSTOM_API_KEY },
-      body: JSON.stringify({ model: CUSTOM_MODEL, messages: msgs, temperature: 0.7, max_tokens: 4096 }),
-      signal: controller.signal,
-    });
-    if (!response.ok) throw new Error('HTTP ' + response.status + ': ' + response.statusText);
-    const data = await response.json();
-    const text = (data.choices && data.choices[0] && data.choices[0].message && data.choices[0].message.content) || '';
-    await typewrite(text, onChunk);
-    return { content: text, modelId: CUSTOM_MODEL };
-  } finally {
-    clearTimeout(timeoutId);
-  }
-}
-
-// ---------- OpenHands (opsional, butuh API key) ----------
-async function openhandsAnswer(msgs, onChunk, onTool) {
-  const lastUser = msgs.slice().reverse().find((m) => m.role === 'user');
-  const initial = lastUser ? lastUser.content : '';
-  const response = await fetch(OH_API_BASE + '/app-conversations', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + OH_API_KEY },
-    body: JSON.stringify({ initial_message: { content: [{ type: 'text', text: initial }] } }),
-  });
-  if (!response.ok) {
-    if (response.status === 401) throw new Error('OpenHands API key is missing or invalid (HTTP 401).');
-    throw new Error('OpenHands request failed: ' + response.status);
-  }
-  const data = await response.json();
-  let convId = data.app_conversation_id || null;
-  if (!convId && data.id) {
-    setStatus('', 'Starting sandbox\u2026');
-    convId = await waitForConversation(data.id);
-  }
-  if (!convId) throw new Error('Could not resolve conversation id');
-  return await pollEvents(convId, onChunk, onTool);
-}
-
-async function waitForConversation(startTaskId) {
-  for (let i = 0; i < 90; i++) {
-    await sleep(2000);
-    const res = await fetch(OH_API_BASE + '/app-conversations/start-tasks?ids=' + encodeURIComponent(startTaskId), {
-      headers: { 'Authorization': 'Bearer ' + OH_API_KEY },
-    });
-    if (!res.ok) continue;
-    const body = await res.json();
-    const task = Array.isArray(body) ? body[0] : (body.items || [])[0];
-    if (!task) continue;
-    if (task.status === 'READY' && task.app_conversation_id) return task.app_conversation_id;
-    if (task.status === 'ERROR' || task.status === 'FAILED') throw new Error('Sandbox failed to start: ' + (task.detail || task.status));
-  }
-  throw new Error('Timed out waiting for the sandbox to start');
-}
-
-function isFinished(event) {
-  return event.kind === 'ConversationStateUpdateEvent' && event.key === 'execution_status' &&
-    (event.value === 'finished' || event.value === 'failed' || event.value === 'error');
-}
-
-async function pollEvents(convId, onChunk, onTool) {
-  const seen = new Set();
-  let consecutiveEmpty = 0;
-  let buffer = '';
-  const baseDelay = 600;
-  while (true) {
-    try {
-      const response = await fetch(OH_API_BASE + '/conversation/' + convId + '/events/search?limit=100', {
-        headers: { 'Authorization': 'Bearer ' + OH_API_KEY },
-      });
-      if (!response.ok) { await sleep(baseDelay); consecutiveEmpty = 0; continue; }
-      const data = await response.json();
-      const items = data.items || [];
-      if (items.length === 0) {
-        consecutiveEmpty++;
-        await sleep(baseDelay + consecutiveEmpty * 100);
-        continue;
-      }
-      consecutiveEmpty = 0;
-      for (const event of items) {
-        if (seen.has(event.id)) continue;
-        seen.add(event.id);
-        if (event.kind === 'MessageEvent' && (event.source === 'agent' || event.source === 'assistant')) {
-          const msg = event.message || event.llm_message || {};
-          let text = typeof msg === 'string' ? msg : (msg.content || '');
-          if (Array.isArray(text)) text = text.map((c) => c.text || c.content || '').join('');
-          text = cleanResponse(text);
-          if (text && text.trim()) {
-            buffer = text;
-            if (onChunk) onChunk(buffer);
-          }
-        }
-        if (event.kind === 'ActionEvent' && event.tool_name && onTool) onTool(event.tool_name);
-        if (isFinished(event)) return { content: buffer, modelId: 'OpenHands' };
-      }
-      await sleep(baseDelay - 100);
-    } catch (e) {
-      await sleep(baseDelay * 2);
-    }
-  }
-}
-
-// ---------- Router jawaban ----------
-async function chatAnswer(msgs, model, onChunk, onTool) {
-  if (API_MODE === 'custom') return await customAnswer(msgs, onChunk);
-  if (API_MODE === 'openhands') return await openhandsAnswer(msgs, onChunk, onTool);
+// ---------- Router jawaban (hanya model gratis) ----------
+async function chatAnswer(msgs, model, onChunk) {
   return await freeAnswer(msgs, model, onChunk);
 }
 
@@ -541,13 +409,11 @@ async function regenerate(idx, msgEls) {
   syncSendState();
   activeBadge.classList.add('show');
   msgEls.inner.innerHTML = typingHtml();
-  msgEls.tools.innerHTML = '';
   msgEls.actions.style.display = 'none';
   setStatus('', 'Regenerating\u2026');
   try {
     const built = await chatAnswer(threadHistoryFor(idx), modelSelect.value,
-      (partial) => { msgEls.inner.innerHTML = renderMarkdown(partial); scrollDown(); },
-      (name) => addToolLine(msgEls.tools, name));
+      (partial) => { msgEls.inner.innerHTML = renderMarkdown(partial); scrollDown(); });
     msgEls.inner.innerHTML = renderMarkdown(built.content);
     th.items[idx] = { role: 'assistant', content: built.content, model: built.modelId };
     msgEls.actions.style.display = '';
@@ -573,17 +439,6 @@ async function onSend() {
   const text = input.value.trim();
   if (!text || busy) return;
 
-  if (API_MODE === 'custom' && (!CUSTOM_API_BASE || !CUSTOM_API_KEY)) {
-    showSettings();
-    showToast('Set your Custom LLM base URL and API key first');
-    return;
-  }
-  if (API_MODE === 'openhands' && !OH_API_KEY) {
-    showSettings();
-    showToast('Add your OpenHands API key to start chatting');
-    return;
-  }
-
   if (history.length === 0) newThread();
 
   busy = true;
@@ -606,8 +461,7 @@ async function onSend() {
 
   try {
     const built = await chatAnswer(threadHistoryFor(itemIdx), modelSelect.value,
-      (partial) => { msgEls.inner.innerHTML = renderMarkdown(partial); scrollDown(); },
-      (name) => addToolLine(msgEls.tools, name));
+      (partial) => { msgEls.inner.innerHTML = renderMarkdown(partial); scrollDown(); });
     msgEls.inner.innerHTML = renderMarkdown(built.content || '_(empty response)_');
     item.content = built.content;
     item.model = built.modelId;
@@ -727,93 +581,24 @@ function showShortcuts() {
 
 // ---------- Modal pengaturan ----------
 function showSettings() {
-  const isFree = API_MODE === 'free';
-  const isCustom = API_MODE === 'custom';
-  const isOH = API_MODE === 'openhands';
-
   const freeOpts = ['<option value="semua"' + (FREE_MODEL === 'semua' ? ' selected' : '') + '>Auto Model (Tercepat)</option>']
     .concat(FREE_MODELS.map((m) => '<option value="' + m + '"' + (FREE_MODEL === m ? ' selected' : '') + '>' + m + '</option>'))
     .join('');
 
-  const customModels = ['gpt-5.5', 'gpt-5.5-mini', 'gpt-5.5-nano', 'gpt-5.5-pro', 'claude-opus-4-7', 'claude-sonnet-4-6', 'gemini-2.5-flash', 'deepseek-chat', 'grok-4.3', 'smart-chat'];
-  const customOpts = customModels.map((m) => '<option value="' + m + '"' + (CUSTOM_MODEL === m ? ' selected' : '') + '>' + m + '</option>').join('');
-
   openModal(
-    '<h3><i class="ri-settings-3-line"></i> API settings</h3>' +
-    '<div class="field"><label>API mode</label><div class="mode-row">' +
-      '<button class="mode-btn ' + (isFree ? 'active' : '') + '" onclick="setApiMode(\'free\', this)"><i class="ri-sparkling-2-line"></i> Free Models</button>' +
-      '<button class="mode-btn ' + (isOH ? 'active' : '') + '" onclick="setApiMode(\'openhands\', this)"><i class="ri-robot-line"></i> OpenHands</button>' +
-      '<button class="mode-btn ' + (isCustom ? 'active' : '') + '" onclick="setApiMode(\'custom\', this)"><i class="ri-links-line"></i> Custom LLM</button>' +
-    '</div></div>' +
-
-    '<div id="freeApiSettings" style="display:' + (isFree ? 'block' : 'none') + ';">' +
-      '<div class="field"><label>Model</label><select id="freeModel">' + freeOpts + '</select>' +
-      '<small>Free models without an API key \u2014 same as <a href="https://antono4.github.io/MarbelAIv2.1/" target="_blank" rel="noopener">MarbelAIv2.1</a>. Automatic failover between providers.</small></div>' +
-    '</div>' +
-
-    '<div id="openhandsApiSettings" style="display:' + (isOH ? 'block' : 'none') + ';">' +
-      '<div class="field"><label>OpenHands API Key</label><input type="password" id="ohApiKey" value="' + escHtml(OH_API_KEY) + '" placeholder="sk-oh-...">' +
-      '<small>Get a key at <a href="https://app.all-hands.dev/settings/api-keys" target="_blank" rel="noopener">app.all-hands.dev/settings/api-keys</a>. Stored only in this browser.</small></div>' +
-      '<div class="field"><label>API Base URL</label><input type="text" id="ohApiBase" value="' + escHtml(OH_API_BASE) + '" placeholder="https://app.all-hands.dev/api/v1"></div>' +
-    '</div>' +
-
-    '<div id="customApiSettings" style="display:' + (isCustom ? 'block' : 'none') + ';">' +
-      '<div class="field"><label>API Base URL</label><input type="text" id="customApiBase" value="' + escHtml(CUSTOM_API_BASE) + '" placeholder="https://api.example.com/v1">' +
-      '<small>Free keys: <a href="https://github.com/alistaitsacle/free-llm-api-keys" target="_blank" rel="noopener">github.com/alistaitsacle/free-llm-api-keys</a></small></div>' +
-      '<div class="field"><label>API Key</label><input type="password" id="customApiKey" value="' + escHtml(CUSTOM_API_KEY) + '" placeholder="sk-..."></div>' +
-      '<div class="field"><label>Model</label><select id="customModel">' + customOpts + '</select></div>' +
-    '</div>' +
-
-    '<div class="modal-actions"><button class="btn-primary" onclick="saveSettings()">Save &amp; Test</button>' +
+    '<h3><i class="ri-settings-3-line"></i> Model settings</h3>' +
+    '<div class="field"><label>Model</label><select id="freeModel">' + freeOpts + '</select>' +
+    '<small>Model gratis tanpa API key \u2014 sama seperti <a href="https://antono4.github.io/MarbelAIv2.1/" target="_blank" rel="noopener">MarbelAIv2.1</a>. Failover otomatis antar penyedia.</small></div>' +
+    '<div class="modal-actions"><button class="btn-primary" onclick="saveSettings()">Save</button>' +
     '<button class="btn-ghost" onclick="closeModal()">Cancel</button></div>'
   );
 }
 
-function setApiMode(mode, btn) {
-  API_MODE = mode;
-  localStorage.setItem('api_mode', mode);
-  document.querySelectorAll('.modal .mode-btn').forEach((b) => b.classList.remove('active'));
-  if (btn) btn.classList.add('active');
-  const freeDiv = document.getElementById('freeApiSettings');
-  const ohDiv = document.getElementById('openhandsApiSettings');
-  const customDiv = document.getElementById('customApiSettings');
-  if (freeDiv) freeDiv.style.display = mode === 'free' ? 'block' : 'none';
-  if (ohDiv) ohDiv.style.display = mode === 'openhands' ? 'block' : 'none';
-  if (customDiv) customDiv.style.display = mode === 'custom' ? 'block' : 'none';
-}
-
 function saveSettings() {
-  if (API_MODE === 'free') {
-    const sel = document.getElementById('freeModel');
-    if (sel) setModel(sel.value);
-    localStorage.setItem('api_mode', 'free');
-    closeModal();
-    showToast('\u2705 Free models ready \u2014 no API key needed');
-    return;
-  }
-  if (API_MODE === 'custom') {
-    CUSTOM_API_BASE = (document.getElementById('customApiBase').value || '').trim();
-    CUSTOM_API_KEY = (document.getElementById('customApiKey').value || '').trim();
-    CUSTOM_MODEL = document.getElementById('customModel').value;
-    localStorage.setItem('custom_api_base', CUSTOM_API_BASE);
-    localStorage.setItem('custom_api_key', CUSTOM_API_KEY);
-    localStorage.setItem('custom_model', CUSTOM_MODEL);
-    if (!CUSTOM_API_BASE || !CUSTOM_API_KEY) { showToast('Please enter API Base URL and Key'); return; }
-    localStorage.setItem('api_mode', 'custom');
-    closeModal();
-    showToast('Custom LLM saved');
-    return;
-  }
-  const keyInput = document.getElementById('ohApiKey');
-  const baseInput = document.getElementById('ohApiBase');
-  OH_API_KEY = keyInput ? keyInput.value.trim() : OH_API_KEY;
-  OH_API_BASE = (baseInput && baseInput.value.trim()) || 'https://app.all-hands.dev/api/v1';
-  localStorage.setItem('oh_api_key', OH_API_KEY);
-  localStorage.setItem('oh_api_base', OH_API_BASE);
-  localStorage.setItem('api_mode', 'openhands');
-  if (!OH_API_KEY) { showToast('Please enter your OpenHands API key'); return; }
+  const sel = document.getElementById('freeModel');
+  if (sel) setModel(sel.value);
   closeModal();
-  showToast('OpenHands settings saved');
+  showToast('\u2705 Free models ready \u2014 no API key needed');
 }
 
 // ---------- Aksi topbar ----------
