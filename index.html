@@ -127,7 +127,7 @@
 
       <!-- ============ Composer ============ -->
       <form id="form" class="composer" autocomplete="off">
-        <textarea id="input" rows="1" placeholder="Ask Generalist Agent anything… (Enter to send)" aria-label="Message"></textarea>
+        <textarea id="input" rows="1" placeholder="Ask Generalist Agent anything…" aria-label="Message" enterkeyhint="send"></textarea>
         <div class="composer-footer">
           <div class="cf-left">
             <label class="custom-select">
@@ -138,8 +138,10 @@
             </label>
           </div>
           <div class="cf-actions">
-            <button id="send" type="submit" class="send" title="Send" aria-label="Send message">
-              <i class="ri-send-plane-fill"></i>
+            <span class="cf-hint" id="composerHint">Enter to send · Shift+Enter for a new line</span>
+            <button id="send" type="submit" class="send" title="Send message" aria-label="Send message" disabled>
+              <i class="ri-send-plane-fill send-ico" aria-hidden="true"></i>
+              <span class="send-spinner" aria-hidden="true"></span>
             </button>
           </div>
         </div>

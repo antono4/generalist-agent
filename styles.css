@@ -634,17 +634,36 @@ html[data-theme="dark"] .theme-toggle .icon-moon { display:inline-flex; }
 .custom-select select:hover { border-color:var(--accent); }
 .custom-select select:focus { border-color:var(--accent); }
 
+.cf-actions { display:flex; align-items:center; gap:12px; margin-left:auto; }
+.cf-hint { font-size:11.5px; color:var(--muted); white-space:nowrap; }
+
 .send {
+  position:relative;
   display:grid; place-items:center;
   width:42px; height:42px; border-radius:12px;
   background:var(--accent);
   color:var(--accent-ink);
   border:none; cursor:pointer;
-  transition:transform .14s ease,background .14s ease,border-radius .14s ease;
+  flex:0 0 auto;
+  transition:transform .14s ease,background .14s ease,border-radius .14s ease,opacity .14s ease;
 }
-.send:hover { transform:translateY(-1px); background:color-mix(in srgb,var(--accent) 85%,black); border-radius:14px; }
-.send:active { transform:translateY(0) scale(.95); }
-.send:disabled { opacity:.45; cursor:not-allowed; transform:none; }
+.send .send-ico { font-size:19px; line-height:1; display:block; }
+.send:hover:not(:disabled) { transform:translateY(-1px); background:color-mix(in srgb,var(--accent) 85%,black); border-radius:14px; }
+.send:active:not(:disabled) { transform:translateY(0) scale(.95); }
+.send:disabled { opacity:.4; cursor:not-allowed; transform:none; }
+
+/* Spinner saat permintaan sedang diproses */
+.send-spinner {
+  position:absolute; inset:0; margin:auto;
+  width:18px; height:18px; border-radius:50%;
+  border:2px solid color-mix(in srgb,var(--accent-ink) 35%,transparent);
+  border-top-color:var(--accent-ink);
+  display:none; animation:send-spin .7s linear infinite;
+}
+.send.busy .send-ico { visibility:hidden; }
+.send.busy .send-spinner { display:block; }
+.send.busy { cursor:progress; opacity:1; }
+@keyframes send-spin { to { transform:rotate(360deg); } }
 
 /* ================== Fokus keyboard ================== */
 button:focus-visible,
@@ -705,6 +724,7 @@ textarea:focus-visible {
   .custom-select { flex:1 1 auto; }
   .custom-select select { width:100%; max-width:140px; padding:7px 9px; font-size:11.5px; }
   .send { width:38px; height:38px; border-radius:10px; }
+  .cf-hint { display:none; }
   .cf-actions { gap:6px; }
   .media-btn { padding:7px 10px; font-size:12px; }
   .media-btn span { display:none; }
