@@ -543,6 +543,27 @@ body {
     opacity: 0.7;
 }
 
+.model-select-wrap {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    color: var(--text-muted);
+}
+
+.model-select {
+    padding: 4px 8px;
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    color: var(--text-primary);
+    font-family: inherit;
+    font-size: 0.72rem;
+    cursor: pointer;
+    outline: none;
+}
+
+.model-select:focus { border-color: var(--accent); }
+
 .send-btn {
     width: 48px;
     height: 48px;
@@ -744,7 +765,7 @@ body {
             <div class="logo"><i class="ri-robot-line"></i></div>
             <div class="brand">
                 <h1>Generalist Agent</h1>
-                <span>Powered by OpenHands</span>
+                <span>Powered by free models · no API key</span>
             </div>
         </div>
         <div class="header-right">
@@ -820,7 +841,10 @@ body {
             <div class="input-box">
                 <textarea id="messageInput" placeholder="Type your message... (Ctrl+Enter to send)" rows="1"></textarea>
                 <div class="input-footer">
-                    <span id="charCount" class="char-count">0</span>
+                    <div class="model-select-wrap">
+                        <i class="ri-sparkling-2-line"></i>
+                        <select id="modelSelect" class="model-select" title="Free model (MarbelAI-style)" onchange="setModel(this.value)"></select>
+                    </div>
                     <span class="input-hint">Ctrl+Enter to send</span>
                 </div>
             </div>
@@ -833,9 +857,9 @@ body {
 
 <script>
 // API Configuration
-let API_MODE = localStorage.getItem('api_mode') || 'openhands'; // 'openhands' or 'custom'
+let API_MODE = localStorage.getItem('api_mode') || 'free'; // 'free', 'openhands' or 'custom'
 
-// OpenHands API (default).
+// OpenHands API (opt-in mode; the default is the key-less free models below).
 // The API key is never hardcoded in this file: set it in the Settings dialog,
 // or pass it once with ?api_key=... . A committed key would eventually expire
 // (returning HTTP 401) and cannot be rotated without a new deploy.
@@ -850,6 +874,74 @@ if (OH_PARAMS.get('oh_api_base')) localStorage.setItem('oh_api_base', OH_API_BAS
 let CUSTOM_API_BASE = localStorage.getItem('custom_api_base') || '';
 let CUSTOM_API_KEY = localStorage.getItem('custom_api_key') || '';
 let CUSTOM_MODEL = localStorage.getItem('custom_model') || 'gpt-5.5';
+
+// Free models — same configuration as MarbelAIv2.1 (https://antono4.github.io/MarbelAIv2.1/).
+// Sumber: https://github.com/zebbern/no-cost-ai
+// Provider gratis yang bisa dipanggil langsung dari browser (CORS aktif),
+// sehingga halaman statis GitHub Pages tetap berfungsi tanpa backend proxy:
+//  - uncloseai (hermes.ai.unturf.com & qwen.ai.unturf.com) — Qwen 3.8 27B, tanpa API key.
+//  - pollinations (text.pollinations.ai) — GPT-OSS 20B (tier anonim, alias `openai`).
+//  - Free.ai (api.free.ai) — model open-weight gratis, dipakai sebagai cadangan.
+const FREE_MODELS = [
+    'qwen3.8-27b',
+    'gpt-oss-20b',
+    'qwen3-8b',
+];
+const DIRECT_UPSTREAMS = [
+    'https://hermes.ai.unturf.com',
+    'https://qwen.ai.unturf.com',
+    'https://text.pollinations.ai',
+    'https://api.free.ai',
+];
+const DIRECT_PAYLOAD = {
+    'https://hermes.ai.unturf.com': { chat_template_kwargs: { enable_thinking: false } },
+    'https://qwen.ai.unturf.com': { chat_template_kwargs: { enable_thinking: false } },
+    'https://text.pollinations.ai': {},
+    'https://api.free.ai': {},
+};
+// uncloseai kini hanya melayani satu model: turboderp/Qwen3.8-27B-exl3.
+// pollinations mengenali alias `openai` (GPT-OSS 20B); free.ai hanya qwen7b/qwen3-8b.
+const UNCLOSEAI_MODEL = 'turboderp/Qwen3.8-27B-exl3';
+const DIRECT_MODEL_MAP = {
+    'https://hermes.ai.unturf.com': {
+        'qwen3.8-27b': UNCLOSEAI_MODEL,
+        'gpt-oss-20b': UNCLOSEAI_MODEL,
+        'qwen3-8b': UNCLOSEAI_MODEL,
+    },
+    'https://qwen.ai.unturf.com': {
+        'qwen3.8-27b': UNCLOSEAI_MODEL,
+        'gpt-oss-20b': UNCLOSEAI_MODEL,
+        'qwen3-8b': UNCLOSEAI_MODEL,
+    },
+    'https://text.pollinations.ai': {
+        'qwen3.8-27b': 'openai',
+        'gpt-oss-20b': 'openai',
+        'qwen3-8b': 'openai',
+    },
+    'https://api.free.ai': {
+        'qwen3.8-27b': 'qwen7b',
+        'gpt-oss-20b': 'qwen7b',
+        'qwen3-8b': 'qwen3-8b',
+    },
+};
+const FREE_MODEL_KEY = 'free_model';
+let FREE_MODEL = localStorage.getItem(FREE_MODEL_KEY) || 'semua';
+
+// Model chat aktif untuk mode "free": pilihan spesifik, atau seluruh daftar
+// (mode "semua" = auto/failover) bila belum dipilih.
+function activeFreeModels() {
+    if (FREE_MODEL && FREE_MODEL !== 'semua' && FREE_MODELS.indexOf(FREE_MODEL) !== -1) {
+        return [FREE_MODEL];
+    }
+    return FREE_MODELS.slice();
+}
+
+function setModel(value) {
+    FREE_MODEL = value;
+    localStorage.setItem(FREE_MODEL_KEY, value);
+    const sel = document.getElementById('modelSelect');
+    if (sel && sel.value !== value) sel.value = value;
+}
 
 const messagesContainer = document.getElementById('messages');
 const welcomeScreen = document.getElementById('welcome');
@@ -882,11 +974,6 @@ messageInput.addEventListener('input', function() {
     this.style.height = 'auto';
     this.style.height = Math.min(this.scrollHeight, 150) + 'px';
     
-    // Update char count
-    const charCount = document.getElementById('charCount');
-    if (charCount) {
-        charCount.textContent = this.value.length;
-    }
     
     // Enable/disable send button
     const sendBtn = document.querySelector('.send-btn');
@@ -1013,6 +1100,7 @@ function showSettings() {
     modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
     
     const isCustom = API_MODE === 'custom';
+    const isFree = API_MODE === 'free';
     
     modal.innerHTML = `
         <div class="modal" style="max-width: 500px;">
@@ -1020,8 +1108,11 @@ function showSettings() {
             
             <div style="margin: 16px 0;">
                 <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">API Mode</label>
-                <div style="display: flex; gap: 8px;">
-                    <button class="quick-btn ${!isCustom ? 'active' : ''}" onclick="setApiMode('openhands', this)" style="${!isCustom ? 'border-color: var(--accent); background: var(--bg-hover);' : ''}">
+                <div style="display: flex; gap: 8px; flex-wrap: wrap;">
+                    <button class="quick-btn ${isFree ? 'active' : ''}" onclick="setApiMode('free', this)" style="${isFree ? 'border-color: var(--accent); background: var(--bg-hover);' : ''}">
+                        <i class="ri-sparkling-2-line"></i> Free Models
+                    </button>
+                    <button class="quick-btn ${!isCustom && !isFree ? 'active' : ''}" onclick="setApiMode('openhands', this)" style="${!isCustom && !isFree ? 'border-color: var(--accent); background: var(--bg-hover);' : ''}">
                         <i class="ri-robot-line"></i> OpenHands
                     </button>
                     <button class="quick-btn ${isCustom ? 'active' : ''}" onclick="setApiMode('custom', this)" style="${isCustom ? 'border-color: var(--accent); background: var(--bg-hover);' : ''}">
@@ -1030,7 +1121,21 @@ function showSettings() {
                 </div>
             </div>
             
-            <div id="openhandsApiSettings" style="display: ${isCustom ? 'none' : 'block'};">
+            <div id="freeApiSettings" style="display: ${isFree ? 'block' : 'none'};">
+                <div style="margin: 16px 0;">
+                    <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">Model</label>
+                    <select id="freeModel" style="width: 100%; padding: 10px 12px; background: var(--bg-input); border: 1px solid var(--border); border-radius: var(--radius-sm); color: var(--text-primary); font-size: 0.85rem;">
+                        <option value="semua" ${FREE_MODEL === 'semua' ? 'selected' : ''}>Auto Model (Tercepat)</option>
+                        ${FREE_MODELS.map(m => `<option value="${m}" ${FREE_MODEL === m ? 'selected' : ''}>${m}</option>`).join('')}
+                    </select>
+                    <small style="color: var(--text-muted); font-size: 0.7rem; margin-top: 4px; display: block;">
+                        Model gratis tanpa API key — sama seperti <a href="https://antono4.github.io/MarbelAIv2.1/" target="_blank" style="color: var(--accent);">MarbelAIv2.1</a>.
+                        Failover otomatis antar provider saat satu sedang sibuk.
+                    </small>
+                </div>
+            </div>
+
+            <div id="openhandsApiSettings" style="display: ${isCustom || isFree ? 'none' : 'block'};">
                 <div style="margin: 16px 0;">
                     <label style="display: block; margin-bottom: 8px; color: var(--text-secondary); font-size: 0.85rem;">OpenHands API Key</label>
                     <input type="password" id="ohApiKey" value="${OH_API_KEY}" placeholder="sk-oh-..."
@@ -1110,12 +1215,21 @@ function setApiMode(mode, btn) {
     // Show/hide the settings panel for the active mode
     const customDiv = document.getElementById('customApiSettings');
     const ohDiv = document.getElementById('openhandsApiSettings');
+    const freeDiv = document.getElementById('freeApiSettings');
     if (customDiv) customDiv.style.display = mode === 'custom' ? 'block' : 'none';
-    if (ohDiv) ohDiv.style.display = mode === 'custom' ? 'none' : 'block';
+    if (freeDiv) freeDiv.style.display = mode === 'free' ? 'block' : 'none';
+    if (ohDiv) ohDiv.style.display = (mode === 'openhands') ? 'block' : 'none';
 }
 
 function saveSettings() {
-    if (API_MODE === 'custom') {
+    if (API_MODE === 'free') {
+        const sel = document.getElementById('freeModel');
+        if (sel) setModel(sel.value);
+        localStorage.setItem('api_mode', 'free');
+        showToast('\u2705 Free models ready \u2014 no API key needed');
+        const modal = document.querySelector('.modal-overlay');
+        if (modal) modal.remove();
+    } else if (API_MODE === 'custom') {
         CUSTOM_API_BASE = document.getElementById('customApiBase').value.trim();
         CUSTOM_API_KEY = document.getElementById('customApiKey').value.trim();
         CUSTOM_MODEL = document.getElementById('customModel').value;
@@ -1242,7 +1356,7 @@ async function sendMessage() {
         showToast('Set your Custom LLM base URL and API key first');
         return;
     }
-    if (API_MODE !== 'custom' && !OH_API_KEY) {
+    if (API_MODE === 'openhands' && !OH_API_KEY) {
         showSettings();
         showToast('Add your OpenHands API key to start chatting');
         return;
@@ -1269,6 +1383,8 @@ async function sendMessage() {
     try {
         if (API_MODE === 'custom' && CUSTOM_API_BASE && CUSTOM_API_KEY) {
             await sendToCustomLLM(text);
+        } else if (API_MODE === 'free') {
+            await sendToFreeModels();
         } else {
             await startConversation(text);
         }
@@ -1284,6 +1400,110 @@ async function sendMessage() {
         textarea.disabled = false;
         textarea.focus();
     }
+}
+
+// Free models — MarbelAI-style direct-CORS calls (no backend, no API key).
+// Port of MarbelAIv2.1 app.js: modelChat / directChat / firstFulfilled.
+function directChatUrl(base) {
+    const b = base.replace(/\/$/, '');
+    // pollinations menaruh endpoint OpenAI-compatible di `/openai`, bukan `/v1`.
+    if (b === 'https://text.pollinations.ai') return b + '/openai';
+    return b + '/v1/chat/completions';
+}
+
+function withTimeout(promise, ms) {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout ' + Math.round(ms / 1000) + 's')), ms)),
+    ]);
+}
+
+// Failover berurutan: coba tiap upstream sampai ada yang berhasil.
+async function directChat(messages, model) {
+    const errors = [];
+    for (const base of DIRECT_UPSTREAMS) {
+        const url = directChatUrl(base);
+        const upModel = (DIRECT_MODEL_MAP[base] && DIRECT_MODEL_MAP[base][model]) || model;
+        const payload = Object.assign({}, DIRECT_PAYLOAD[base] || {}, {
+            model: upModel,
+            messages: messages,
+            stream: false,
+        });
+        try {
+            const res = await withTimeout(fetch(url, {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify(payload),
+            }), 60000);
+            if (!res.ok) {
+                const t = await res.text().catch(() => '');
+                throw new Error('HTTP ' + res.status + (t ? ': ' + t.slice(0, 100) : ''));
+            }
+            const data = await res.json();
+            if (data && data.error) throw new Error(data.error.message || data.error);
+            let text = '';
+            if (data && data.choices && data.choices[0]) {
+                const c = data.choices[0].message || {};
+                text = c.content || c.reasoning_content || '';
+            }
+            if (typeof data === 'string') text = data;
+            if (!text) throw new Error('Model tanpa isi');
+            return { text: text, realModel: (data && data.model) || model };
+        } catch (err) {
+            errors.push(base.replace('https://', '') + ' → ' + err.message);
+        }
+    }
+    throw new Error(errors.join(' · ') || 'Semua upstream gagal.');
+}
+
+// Resolve with the first successful promise (fastest wins) — mirrors MarbelAI
+// "Auto Model" ensemble behaviour.
+function firstFulfilled(promises) {
+    return new Promise((resolve, reject) => {
+        let pending = promises.length;
+        if (pending === 0) { reject(new Error('Tidak ada model untuk dicoba.')); return; }
+        let done = false;
+        let lastErr = null;
+        promises.forEach(p => p.then(v => {
+            if (done) return;
+            done = true;
+            resolve(v);
+        }, err => {
+            lastErr = err;
+            pending--;
+            if (pending === 0 && !done) reject(lastErr || new Error('Semua model gagal.'));
+        }));
+    });
+}
+
+// Kirim pesan ke model gratis lalu tampilkan jawaban.
+//  - Mode "semua": semua model dijalankan paralel, jawaban tercepat yang menang.
+//  - Mode tunggal : hanya model pilihan yang dipakai (dengan failover antar provider).
+async function sendToFreeModels() {
+    const selected = activeFreeModels();
+    let result = null;
+
+    if (selected.length > 1) {
+        setStatus('processing', 'Auto model...');
+        result = await firstFulfilled(selected.map(m =>
+            directChat(chatHistory, m).then(out => ({ modelId: out.realModel || m, content: out.text }))
+        ));
+    } else {
+        const m = selected[0];
+        setStatus('processing', m + '...');
+        const out = await directChat(chatHistory, m);
+        result = { modelId: out.realModel || m, content: out.text };
+    }
+
+    hideTyping();
+    const cleaned = cleanResponse(result.content);
+    if (cleaned) {
+        chatHistory.push({ role: 'assistant', content: cleaned });
+        addMessage(cleaned, 'bot');
+    } else {
+        addMessage('⚠️ **Empty Response:** The model returned no content. Try another model.', 'bot');
+    }
+    setStatus('ready', 'Ready');
 }
 
 // Custom LLM API (OpenAI-compatible)
@@ -1607,6 +1827,16 @@ const escapeHtml = (text) => {
 };
 
 const sleep = (ms) => new Promise(r => setTimeout(r, ms));
+
+// Populate the composer model selector (mirrors MarbelAI's Auto Model dropdown).
+(function initModelSelect() {
+    const sel = document.getElementById('modelSelect');
+    if (!sel) return;
+    const opts = ['<option value="semua">Auto Model (Tercepat)</option>'];
+    FREE_MODELS.forEach(m => opts.push(`<option value="${m}">${m}</option>`));
+    sel.innerHTML = opts.join('');
+    sel.value = FREE_MODEL;
+})();
 </script>
 
     <footer style="text-align:center;padding:20px;font-size:14px;color:#666;">
