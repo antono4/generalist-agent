@@ -1,175 +1,66 @@
-# Generalist Agent 🤖
+<!-- README ini dihasilkan otomatis oleh workflow .github/workflows/generate-readme.yml -->
+<!-- Jangan edit manual; perubahan akan ditim pada run berikutnya. -->
 
-<div align="center">
+<h1 align="center">Generalist Agent - AI Assistant 👋</h1>
 
-![License](https://img.shields.io/badge/License-MIT-blue.svg)
-![Version](https://img.shields.io/badge/Version-1.0.0-green.svg)
-![OpenHands](https://img.shields.io/badge/Powered%20by-OpenHands-6366f1)
+<p align="center">
+  <strong>Generalist Agent</strong>
+</p>
 
-**A versatile AI assistant agent built with OpenHands that handles development and automation tasks with ease.**
-
-[Features](#features) • [Quick Start](#quick-start) • [Documentation](#documentation) • [API Reference](#api-reference) • [License](#license)
-
-</div>
-
----
-
-## ✨ Features
-
-| Capability | Description |
-|------------|-------------|
-| 📁 **File Operations** | View, create, edit files with full editor capabilities |
-| 💻 **Terminal Access** | Execute shell commands, run scripts, manage processes |
-| 🌐 **Web Browsing** | Navigate, scrape content, interact with web pages |
-| 🔧 **Code Assistance** | Debug, refactor, review, and write code |
-| ⚡ **Task Automation** | Automate repetitive development tasks |
+<p align="center">
+  <a href="https://github.com/antono4/generalist-agent"><img alt="GitHub repo" src="https://img.shields.io/badge/GitHub-antono4/generalist-agent-blue?logo=github"></a>
+  <a href="https://antono4.github.io/generalist-agent/"><img alt="Live Demo" src="https://img.shields.io/badge/Live%20Demo-Online-success?logo=githubpages"></a>
+  <img alt="Files" src="https://img.shields.io/badge/Files-23-informational">
+  <img alt="Updated" src="https://img.shields.io/badge/Updated-2026-10-01 14:09:45 WIB-lightgrey">
+</p>
 
 ---
 
-## 🚀 Quick Start
+## 📖 Tentang
 
-### Prerequisites
+Repository **`generalist-agent`** adalah situs web pribadi / portofolio yang diterbitkan melalui **GitHub Pages**. Situs utama berada di [`https://antono4.github.io/generalist-agent/`](https://antono4.github.io/generalist-agent/).
 
-- OpenHands API account
-- API Key for authentication
-
-### Web Interface Setup
-
-1. **Deploy** the `index.html` to any web server or open locally
-2. **Configure** your API credentials in the interface
-3. **Start chatting** with the agent
-
-### Configuration
-
-| Variable | Description |
-|----------|-------------|
-| `OPENHANDS_API_KEY` | Your OpenHands API key |
-| `API_BASE` | OpenHands API endpoint URL |
-
----
-
-## 📚 Documentation
-
-### Project Structure
+## 🗂️ Struktur Proyek
 
 ```
 generalist-agent/
-├── README.md          # Project documentation
-├── generalist.md      # Agent configuration & system prompt
-└── index.html         # Web-based chat interface
+├── index.html          # Halaman utama (landing / portofolio)
+├── assets/             # Aset statis (css, js, img, vendor)
+├── forms/               # Form handler (PHP)
 ```
 
-### Architecture
+## 🛠️ Teknologi
 
+Berdasarkan isi repository, proyek ini menggunakan:
+
+- `HTML`
+- `CSS`
+- `JavaScript`
+
+> Total **23 file** terdeteksi di repository.
+
+## 🚀 Menjalankan Secara Lokal
+
+Karena ini situs statis (HTML/CSS/JS/PHP), cukup buka `index.html` di browser, atau jalankan server lokal:
+
+```bash
+# Tanpa dependency
+python3 -m http.server 8000
+# lalu buka http://localhost:8000
+
+# atau dengan PHP (untuk form handler di forms/)
+php -S localhost:8000
 ```
-┌─────────────────────────────────────────────────────────┐
-│                    User Interface                        │
-│                  (index.html - Chat UI)                  │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-                          ▼
-┌─────────────────────────────────────────────────────────┐
-│                   OpenHands API                          │
-│              (generalist Agent - AI Brain)               │
-└─────────────────────────┬───────────────────────────────┘
-                          │
-          ┌───────────────┼───────────────┐
-          ▼               ▼               ▼
-    ┌──────────┐   ┌──────────┐   ┌──────────┐
-    │  File    │   │ Terminal│   │ Browser  │
-    │ Editor   │   │  Shell  │   │  Tools   │
-    └──────────┘   └──────────┘   └──────────┘
-```
+
+## 📬 Kontak
+
+- GitHub: [antono4](https://github.com/antono4)
+- Situs: [https://antono4.github.io/generalist-agent/](https://antono4.github.io/generalist-agent/)
+
+## 📄 Lisensi
+
+Lihat berkas [`LICENSE`](./LICENSE) untuk informasi lisensi.
 
 ---
 
-## 🛠️ Available Tools
-
-### File Operations
-
-| Tool | Description |
-|------|-------------|
-| `file_editor` | View, create, edit files (create, str_replace, undo_edit) |
-| `terminal` | Execute shell commands, run scripts, manage processes |
-
-### Web Browsing
-
-| Tool | Description |
-|------|-------------|
-| `browser_navigate` | Navigate to URLs |
-| `browser_get_state` | Get current page state with interactive elements |
-| `browser_get_content` | Extract main content from page |
-| `browser_click` | Click interactive elements |
-| `browser_type` | Type into input fields |
-| `browser_scroll` | Scroll page up/down |
-
----
-
-## 🔌 LLM Support
-
-The agent supports various LLM providers through LiteLLM proxy:
-
-- **OpenAI** - GPT-4, GPT-3.5
-- **MiniMax M2.7** - High-performance model
-- **Custom** - Any LiteLLM-compatible provider
-
-### LiteLLM Configuration
-
-```yaml
-# config.yaml
-model_list:
-  - model_name: minimax/m2.7
-    litellm_params:
-      model: minimax/m2.7
-      api_key: your-api-key
-      api_base: https://api.minimax.chat/v1
-```
-
----
-
-## 📖 Usage Examples
-
-### Example 1: Code Debugging
-```
-"Debug this error and explain the root cause"
-```
-
-### Example 2: File Manipulation
-```
-"Edit index.html to add a new feature"
-```
-
-### Example 3: Web Research
-```
-"Research the latest trends in AI agents"
-```
-
-### Example 4: Task Automation
-```
-"Create a script to automate my daily workflow"
-```
-
----
-
-## 🤝 Contributing
-
-Contributions are welcome! Please feel free to submit issues or pull requests.
-
-## 📄 License
-
-This project is licensed under the **MIT License**.
-
----
-
-## 👥 Authors
-
-- [antono4](https://github.com/antono4)
-- [openhands-agent](https://github.com/openhands-agent)
-
----
-
-<div align="center">
-
-**Built with ❤️ using [OpenHands](https://github.com/All-Hands-AI/OpenHands)**
-
-</div>
+<sub>README ini di-generate otomatis pada **2026-10-01 14:09:45 WIB** oleh GitHub Actions `.github/workflows/generate-readme.yml`.</sub>
