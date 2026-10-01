@@ -538,7 +538,7 @@ async function regenerate(idx, msgEls) {
   const th = currentThread();
   if (!th || idx < 0) return;
   busy = true;
-  sendBtn.disabled = true;
+  syncSendState();
   activeBadge.classList.add('show');
   msgEls.inner.innerHTML = typingHtml();
   msgEls.tools.innerHTML = '';
@@ -562,7 +562,7 @@ async function regenerate(idx, msgEls) {
     setStatus('err', 'Failed');
   } finally {
     busy = false;
-    sendBtn.disabled = false;
+    syncSendState();
     activeBadge.classList.remove('show');
     updateThreadList();
   }
@@ -587,7 +587,6 @@ async function onSend() {
   if (history.length === 0) newThread();
 
   busy = true;
-  sendBtn.disabled = true;
   showChat();
   activeBadge.classList.add('show');
   input.value = '';
@@ -595,7 +594,7 @@ async function onSend() {
   setStatus('', 'Processing\u2026');
 
   const current = currentThread();
-  if (!current) { busy = false; return; }
+  if (!current) { busy = false; syncSendState(); return; }
   current.items.push({ role: 'user', content: text });
   addUserMessage(text);
 
@@ -628,7 +627,7 @@ async function onSend() {
     persist();
   } finally {
     busy = false;
-    sendBtn.disabled = false;
+    syncSendState();
     activeBadge.classList.remove('show');
     updateThreadList();
     input.focus();
@@ -638,6 +637,15 @@ async function onSend() {
 function resize() {
   input.style.height = 'auto';
   input.style.height = Math.min(220, Math.max(48, input.scrollHeight)) + 'px';
+  syncSendState();
+}
+
+// Tombol kirim hanya aktif saat ada teks dan tidak sedang memproses.
+function syncSendState() {
+  const hasText = input.value.trim().length > 0;
+  sendBtn.disabled = busy || !hasText;
+  sendBtn.classList.toggle('busy', busy);
+  sendBtn.title = busy ? 'Sending…' : 'Send message';
 }
 
 function quickAction(text) {
@@ -882,3 +890,5 @@ if (restore()) {
 setStatus('on', 'Ready');
 syncSidebar();
 resize();
+// Fokus otomatis di desktop; di layar sentuh ini akan memunculkan keyboard.
+if (!isNarrow()) input.focus();
