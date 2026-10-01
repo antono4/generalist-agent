@@ -847,10 +847,37 @@ function exportChat() {
 }
 
 // ---------- Event listeners ----------
+// Pelacakan IME: keyboard Android/iOS sering melaporkan Enter sebagai
+// keyCode 229 / key "Unidentified" saat komposisi.
+let imeComposing = false;
+let shiftEnter = false;
+
 form.addEventListener('submit', (e) => { e.preventDefault(); onSend(); });
-input.addEventListener('input', resize);
+input.addEventListener('input', () => { shiftEnter = false; resize(); });
+
+input.addEventListener('compositionstart', () => { imeComposing = true; });
+input.addEventListener('compositionend', () => { imeComposing = false; });
+
 input.addEventListener('keydown', (e) => {
-  if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); onSend(); }
+  // Enter saat IME aktif hanya mengonfirmasi kandidat, bukan mengirim pesan.
+  if (imeComposing || e.isComposing) return;
+  const isEnter = e.key === 'Enter' || e.keyCode === 13;
+  if (!isEnter) { shiftEnter = false; return; }
+  shiftEnter = e.shiftKey;
+  if (e.shiftKey) return; // biarkan Shift+Enter membuat baris baru
+  e.preventDefault();
+  onSend();
+});
+
+// Keyboard sentuh sering tidak memancarkan keydown Enter yang dikenali,
+// hanya `beforeinput` (insertLineBreak). Jalur ini menangkapnya; pada
+// desktop tidak pernah aktif karena keydown di atas sudah preventDefault.
+input.addEventListener('beforeinput', (e) => {
+  if (e.inputType !== 'insertLineBreak') return;
+  if (shiftEnter) { shiftEnter = false; return; }
+  if (imeComposing) return;
+  e.preventDefault();
+  onSend();
 });
 modelSelect.addEventListener('change', () => setModel(modelSelect.value));
 newThreadBtn.addEventListener('click', () => { if (isNarrow()) layoutEl.classList.add('collapsed'); newThread(); });
